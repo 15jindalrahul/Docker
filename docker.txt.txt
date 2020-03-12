@@ -1,0 +1,74 @@
+                                             March 11,2019
+
+Docker
+1 install from docker.com and change go in system tray and then in settings 
+2 open cmd and if u get error ,paste it on stackoverflow and do changes
+3 docker -machine --help
+4 docker stats
+5 docker pull alpine                 (go on dockerhub on google and search apline)
+6 docker pull ubuntu
+7 docker images
+8 docker pull openjdk                (go on dockerhub and search openjdk)
+9 docker image rm ubuntu             (to delete image if u want)
+10 docker image inspect alpine
+11 docker history 
+12 docker search mongo
+13 docker pull mongo
+
+#                                    now first program of docker
+
+
+1 In eclipse, create a maven project .select in filter and  write org.apcahe.maven with quickStart project and version 1.4
+2 create  a file by  right clicking under project name and name would be (Dockerfile).
+3 Now we have to create a jar file ,rightclick on project and select maven build.
+4 In mavenBuild ,in goals write clean install  
+3 paste this in Dockerfile :
+
+FROM openjdk:8-jre-alpine
+COPY target/docker-0.0.1-SNAPSHOT.jar /usr/share
+WORKDIR /usr/share
+ENTRYPOINT ["java","-cp", "docker-0.0.1-SNAPSHOT.jar", "comm.myCompany.docker.App"]
+
+4 In above docker-0.0.1-SNAPSHOT.jar is name of jar created, we have to give this name only.
+5 In above comm.mycompany.docker is package name and App is class name
+6 From project Directory itself ,open cmd 
+7 docker  build  .  -t  "my-javase-maven-project"
+8 docker images
+9 docker run  my-javase-maven-project
+
+
+
+
+
+#             now first program of docker in spring starter project (we have done Eureka server)
+
+ everthing is same  and dependecy to add :spring web,Eureka server, spring data Actuator,spring boot devtools
+
+
+1 In eclipse, create a spring starter project .
+2 create  a file by  right clicking under project name and name would be (Dockerfile).
+3 Now we have to create a jar file ,rightclick on project and select maven build.
+4 In mavenBuild ,in goals write clean install  
+3 paste this in Dockerfile :
+
+FROM openjdk:8-jre-alpine
+EXPOSE 8761
+ADD /target/springCloud_docker1-0.0.1-SNAPSHOT.jar springCloud_docker1-0.0.1-SNAPSHOT.jar 
+
+ENTRYPOINT ["java","-jar", "springCloud_docker1-0.0.1-SNAPSHOT.jar"]
+
+4 In above springCloud_docker1-0.0.1-SNAPSHOT.jar is name of jar created, we have to give this name only.
+5 From project Directory itself ,open cmd 
+6 docker  build  .  -t  "eureka-docker"    , (here eureka docker is image name ,u can give it your own)
+7 docker images
+8 docker run  -p 8761:8761 eureka-docker
+
+
+
+
+
+
+
+Note :In 1661_docker_build_your_own (1).zip ,consider from example 3 only,not before that.
+
+
