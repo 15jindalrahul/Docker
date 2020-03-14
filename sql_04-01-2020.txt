@@ -1,0 +1,4114 @@
+Enter password: *******
+Welcome to the MySQL monitor.  Commands end with ; or \g.
+Your MySQL connection id is 16
+Server version: 8.0.18 MySQL Community Server - GPL
+
+Copyright (c) 2000, 2019, Oracle and/or its affiliates. All rights reserved.
+
+Oracle is a registered trademark of Oracle Corporation and/or its
+affiliates. Other names may be trademarks of their respective
+owners.
+
+Type 'help;' or '\h' for help. Type '\c' to clear the current input statement.
+
+mysql>
+mysql> CREATE SCHEMA hr COLLATE = utf8_general_ci;
+ERROR 1007 (HY000): Can't create database 'hr'; database exists
+mysql>
+mysql> USE hr;
+Database changed
+mysql>
+mysql> /* ***************************************************************
+   /*> ***************************CREATING TABLES************************
+   /*> **************************************************************** */
+mysql> CREATE TABLE regions (
+    -> region_id INT (11) UNSIGNED NOT NULL,
+    -> region_name VARCHAR(25),
+    -> PRIMARY KEY (region_id)
+    -> );
+ERROR 1050 (42S01): Table 'regions' already exists
+mysql>
+mysql> CREATE TABLE countries (
+    -> country_id CHAR(2) NOT NULL,
+    -> country_name VARCHAR(40),
+    -> region_id INT (11) UNSIGNED NOT NULL,
+    -> PRIMARY KEY (country_id),
+    -> CONSTRAINT countries_regions_region_id FOREIGN KEY (region_id) REFERENCES regions(region_id)
+    -> );
+ERROR 1050 (42S01): Table 'countries' already exists
+mysql>
+mysql> CREATE TABLE locations (
+    -> location_id INT (11) UNSIGNED NOT NULL AUTO_INCREMENT,
+    -> street_address VARCHAR(40),
+    -> postal_code VARCHAR(12),
+    -> city VARCHAR(30) NOT NULL,
+    -> state_province VARCHAR(25),
+    -> country_id CHAR(2) NOT NULL,
+    -> PRIMARY KEY (location_id),
+    -> CONSTRAINT locations_countries_country_id FOREIGN KEY (country_id) REFERENCES countries(country_id)
+    -> );
+ERROR 1050 (42S01): Table 'locations' already exists
+mysql>
+mysql> CREATE TABLE departments (
+    -> department_id INT (11) UNSIGNED NOT NULL,
+    -> department_name VARCHAR(30) NOT NULL,
+    -> manager_id INT (11) UNSIGNED,
+    -> location_id INT (11) UNSIGNED,
+    -> PRIMARY KEY (department_id),
+    -> CONSTRAINT departments_locations_location_id FOREIGN KEY (location_id) REFERENCES locations(location_id)
+    -> );
+ERROR 1050 (42S01): Table 'departments' already exists
+mysql>
+mysql> CREATE TABLE jobs (
+    -> job_id VARCHAR(10) NOT NULL,
+    -> job_title VARCHAR(35) NOT NULL,
+    -> min_salary DECIMAL(8, 0) UNSIGNED,
+    -> max_salary DECIMAL(8, 0) UNSIGNED,
+    -> PRIMARY KEY (job_id)
+    -> );
+ERROR 1050 (42S01): Table 'jobs' already exists
+mysql>
+mysql> CREATE TABLE employees (
+    -> employee_id INT (11) UNSIGNED NOT NULL,
+    -> first_name VARCHAR(20),
+    -> last_name VARCHAR(25) NOT NULL,
+    -> email VARCHAR(25) NOT NULL,
+    -> phone_number VARCHAR(20),
+    -> hire_date DATE NOT NULL,
+    -> job_id VARCHAR(10) NOT NULL,
+    -> salary DECIMAL(8, 2) NOT NULL,
+    -> commission_pct DECIMAL(2, 2),
+    -> manager_id INT (11) UNSIGNED,
+    -> department_id INT (11) UNSIGNED,
+    -> PRIMARY KEY (employee_id),
+    -> CONSTRAINT employees_jobs_job_id FOREIGN KEY (job_id) REFERENCES jobs(job_id),
+    -> CONSTRAINT employees_departments_department_id FOREIGN KEY (department_id) REFERENCES departments(department_id),
+    -> CONSTRAINT employees_employees_employee_id FOREIGN KEY (manager_id) REFERENCES employees(employee_id)
+    -> );
+ERROR 1050 (42S01): Table 'employees' already exists
+mysql>
+mysql> ALTER TABLE departments ADD FOREIGN KEY (manager_id) REFERENCES employees (employee_id);
+Query OK, 27 rows affected (2.17 sec)
+Records: 27  Duplicates: 0  Warnings: 0
+
+mysql>
+mysql> CREATE TABLE job_history (
+    -> employee_id INT (11) UNSIGNED NOT NULL,
+    -> start_date DATE NOT NULL,
+    -> end_date DATE NOT NULL,
+    -> job_id VARCHAR(10) NOT NULL,
+    -> department_id INT (11) UNSIGNED NOT NULL,
+    -> CONSTRAINT job_history_employees_employee_id FOREIGN KEY (employee_id) REFERENCES employees(employee_id),
+    -> CONSTRAINT job_history_jobs_job_id FOREIGN KEY (job_id) REFERENCES jobs(job_id),
+    -> CONSTRAINT job_history_departments_department_id FOREIGN KEY (department_id) REFERENCES departments(department_id)
+    -> );
+ERROR 1050 (42S01): Table 'job_history' already exists
+mysql>
+mysql> ALTER TABLE job_history ADD UNIQUE INDEX (
+    -> employee_id,
+    -> start_date
+    -> );
+Query OK, 0 rows affected, 1 warning (0.49 sec)
+Records: 0  Duplicates: 0  Warnings: 1
+
+mysql>
+mysql> CREATE VIEW emp_details_view
+    -> AS
+    -> SELECT e.employee_id,
+    -> e.job_id,
+    -> e.manager_id,
+    -> e.department_id,
+    -> d.location_id,
+    -> l.country_id,
+    -> e.first_name,
+    -> e.last_name,
+    -> e.salary,
+    -> e.commission_pct,
+    -> d.department_name,
+    -> j.job_title,
+    -> l.city,
+    -> l.state_province,
+    -> c.country_name,
+    -> r.region_name
+    -> FROM employees e,
+    -> departments d,
+    -> jobs j,
+    -> locations l,
+    -> countries c,
+    -> regions r
+    -> WHERE e.department_id = d.department_id
+    -> AND d.location_id = l.location_id
+    -> AND l.country_id = c.country_id
+    -> AND c.region_id = r.region_id
+    -> AND j.job_id = e.job_id;
+ERROR 1050 (42S01): Table 'emp_details_view' already exists
+mysql>
+mysql> /* ***************************************************************
+   /*> ***************************INSERTING DATA*************************
+   /*> **************************************************************** */
+mysql> INSERT INTO regions
+    -> VALUES (
+    -> 1,
+    -> 'Europe'
+    -> );
+ERROR 1062 (23000): Duplicate entry '1' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO regions
+    -> VALUES (
+    -> 2,
+    -> 'Americas'
+    -> );
+ERROR 1062 (23000): Duplicate entry '2' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO regions
+    -> VALUES (
+    -> 3,
+    -> 'Asia'
+    -> );
+ERROR 1062 (23000): Duplicate entry '3' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO regions
+    -> VALUES (
+    -> 4,
+    -> 'Middle East and Africa'
+    -> );
+ERROR 1062 (23000): Duplicate entry '4' for key 'PRIMARY'
+mysql>
+mysql> COMMIT;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql>
+mysql> INSERT INTO countries
+    -> VALUES (
+    -> 'IT',
+    -> 'Italy',
+    -> 1
+    -> );
+ERROR 1062 (23000): Duplicate entry 'IT' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO countries
+    -> VALUES (
+    -> 'JP',
+    -> 'Japan',
+    -> 3
+    -> );
+ERROR 1062 (23000): Duplicate entry 'JP' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO countries
+    -> VALUES (
+    -> 'US',
+    -> 'United States of America',
+    -> 2
+    -> );
+ERROR 1062 (23000): Duplicate entry 'US' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO countries
+    -> VALUES (
+    -> 'CA',
+    -> 'Canada',
+    -> 2
+    -> );
+ERROR 1062 (23000): Duplicate entry 'CA' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO countries
+    -> VALUES (
+    -> 'CN',
+    -> 'China',
+    -> 3
+    -> );
+ERROR 1062 (23000): Duplicate entry 'CN' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO countries
+    -> VALUES (
+    -> 'IN',
+    -> 'India',
+    -> 3
+    -> );
+ERROR 1062 (23000): Duplicate entry 'IN' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO countries
+    -> VALUES (
+    -> 'AU',
+    -> 'Australia',
+    -> 3
+    -> );
+ERROR 1062 (23000): Duplicate entry 'AU' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO countries
+    -> VALUES (
+    -> 'ZW',
+    -> 'Zimbabwe',
+    -> 4
+    -> );
+ERROR 1062 (23000): Duplicate entry 'ZW' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO countries
+    -> VALUES (
+    -> 'SG',
+    -> 'Singapore',
+    -> 3
+    -> );
+ERROR 1062 (23000): Duplicate entry 'SG' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO countries
+    -> VALUES (
+    -> 'UK',
+    -> 'United Kingdom',
+    -> 1
+    -> );
+ERROR 1062 (23000): Duplicate entry 'UK' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO countries
+    -> VALUES (
+    -> 'FR',
+    -> 'France',
+    -> 1
+    -> );
+ERROR 1062 (23000): Duplicate entry 'FR' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO countries
+    -> VALUES (
+    -> 'DE',
+    -> 'Germany',
+    -> 1
+    -> );
+ERROR 1062 (23000): Duplicate entry 'DE' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO countries
+    -> VALUES (
+    -> 'ZM',
+    -> 'Zambia',
+    -> 4
+    -> );
+ERROR 1062 (23000): Duplicate entry 'ZM' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO countries
+    -> VALUES (
+    -> 'EG',
+    -> 'Egypt',
+    -> 4
+    -> );
+ERROR 1062 (23000): Duplicate entry 'EG' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO countries
+    -> VALUES (
+    -> 'BR',
+    -> 'Brazil',
+    -> 2
+    -> );
+ERROR 1062 (23000): Duplicate entry 'BR' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO countries
+    -> VALUES (
+    -> 'CH',
+    -> 'Switzerland',
+    -> 1
+    -> );
+ERROR 1062 (23000): Duplicate entry 'CH' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO countries
+    -> VALUES (
+    -> 'NL',
+    -> 'Netherlands',
+    -> 1
+    -> );
+ERROR 1062 (23000): Duplicate entry 'NL' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO countries
+    -> VALUES (
+    -> 'MX',
+    -> 'Mexico',
+    -> 2
+    -> );
+ERROR 1062 (23000): Duplicate entry 'MX' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO countries
+    -> VALUES (
+    -> 'KW',
+    -> 'Kuwait',
+    -> 4
+    -> );
+ERROR 1062 (23000): Duplicate entry 'KW' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO countries
+    -> VALUES (
+    -> 'IL',
+    -> 'Israel',
+    -> 4
+    -> );
+ERROR 1062 (23000): Duplicate entry 'IL' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO countries
+    -> VALUES (
+    -> 'DK',
+    -> 'Denmark',
+    -> 1
+    -> );
+ERROR 1062 (23000): Duplicate entry 'DK' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO countries
+    -> VALUES (
+    -> 'HK',
+    -> 'HongKong',
+    -> 3
+    -> );
+ERROR 1062 (23000): Duplicate entry 'HK' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO countries
+    -> VALUES (
+    -> 'NG',
+    -> 'Nigeria',
+    -> 4
+    -> );
+ERROR 1062 (23000): Duplicate entry 'NG' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO countries
+    -> VALUES (
+    -> 'AR',
+    -> 'Argentina',
+    -> 2
+    -> );
+ERROR 1062 (23000): Duplicate entry 'AR' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO countries
+    -> VALUES (
+    -> 'BE',
+    -> 'Belgium',
+    -> 1
+    -> );
+ERROR 1062 (23000): Duplicate entry 'BE' for key 'PRIMARY'
+mysql>
+mysql> COMMIT;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql>
+mysql> INSERT INTO locations
+    -> VALUES (
+    -> 1000,
+    -> '1297 Via Cola di Rie',
+    -> '00989',
+    -> 'Roma',
+    -> NULL,
+    -> 'IT'
+    -> );
+ERROR 1062 (23000): Duplicate entry '1000' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO locations
+    -> VALUES (
+    -> 1100,
+    -> '93091 Calle della Testa',
+    -> '10934',
+    -> 'Venice',
+    -> NULL,
+    -> 'IT'
+    -> );
+ERROR 1062 (23000): Duplicate entry '1100' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO locations
+    -> VALUES (
+    -> 1200,
+    -> '2017 Shinjuku-ku',
+    -> '1689',
+    -> 'Tokyo',
+    -> 'Tokyo Prefecture',
+    -> 'JP'
+    -> );
+ERROR 1062 (23000): Duplicate entry '1200' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO locations
+    -> VALUES (
+    -> 1300,
+    -> '9450 Kamiya-cho',
+    -> '6823',
+    -> 'Hiroshima',
+    -> NULL,
+    -> 'JP'
+    -> );
+ERROR 1062 (23000): Duplicate entry '1300' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO locations
+    -> VALUES (
+    -> 1400,
+    -> '2014 Jabberwocky Rd',
+    -> '26192',
+    -> 'Southlake',
+    -> 'Texas',
+    -> 'US'
+    -> );
+ERROR 1062 (23000): Duplicate entry '1400' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO locations
+    -> VALUES (
+    -> 1500,
+    -> '2011 Interiors Blvd',
+    -> '99236',
+    -> 'South San Francisco',
+    -> 'California',
+    -> 'US'
+    -> );
+ERROR 1062 (23000): Duplicate entry '1500' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO locations
+    -> VALUES (
+    -> 1600,
+    -> '2007 Zagora St',
+    -> '50090',
+    -> 'South Brunswick',
+    -> 'New Jersey',
+    -> 'US'
+    -> );
+ERROR 1062 (23000): Duplicate entry '1600' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO locations
+    -> VALUES (
+    -> 1700,
+    -> '2004 Charade Rd',
+    -> '98199',
+    -> 'Seattle',
+    -> 'Washington',
+    -> 'US'
+    -> );
+ERROR 1062 (23000): Duplicate entry '1700' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO locations
+    -> VALUES (
+    -> 1800,
+    -> '147 Spadina Ave',
+    -> 'M5V 2L7',
+    -> 'Toronto',
+    -> 'Ontario',
+    -> 'CA'
+    -> );
+ERROR 1062 (23000): Duplicate entry '1800' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO locations
+    -> VALUES (
+    -> 1900,
+    -> '6092 Boxwood St',
+    -> 'YSW 9T2',
+    -> 'Whitehorse',
+    -> 'Yukon',
+    -> 'CA'
+    -> );
+ERROR 1062 (23000): Duplicate entry '1900' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO locations
+    -> VALUES (
+    -> 2000,
+    -> '40-5-12 Laogianggen',
+    -> '190518',
+    -> 'Beijing',
+    -> NULL,
+    -> 'CN'
+    -> );
+ERROR 1062 (23000): Duplicate entry '2000' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO locations
+    -> VALUES (
+    -> 2100,
+    -> '1298 Vileparle (E)',
+    -> '490231',
+    -> 'Bombay',
+    -> 'Maharashtra',
+    -> 'IN'
+    -> );
+ERROR 1062 (23000): Duplicate entry '2100' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO locations
+    -> VALUES (
+    -> 2200,
+    -> '12-98 Victoria Street',
+    -> '2901',
+    -> 'Sydney',
+    -> 'New South Wales',
+    -> 'AU'
+    -> );
+ERROR 1062 (23000): Duplicate entry '2200' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO locations
+    -> VALUES (
+    -> 2300,
+    -> '198 Clementi North',
+    -> '540198',
+    -> 'Singapore',
+    -> NULL,
+    -> 'SG'
+    -> );
+ERROR 1062 (23000): Duplicate entry '2300' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO locations
+    -> VALUES (
+    -> 2400,
+    -> '8204 Arthur St',
+    -> NULL,
+    -> 'London',
+    -> NULL,
+    -> 'UK'
+    -> );
+ERROR 1062 (23000): Duplicate entry '2400' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO locations
+    -> VALUES (
+    -> 2500,
+    -> 'Magdalen Centre, The Oxford Science Park',
+    -> 'OX9 9ZB',
+    -> 'Oxford',
+    -> 'Oxford',
+    -> 'UK'
+    -> );
+ERROR 1062 (23000): Duplicate entry '2500' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO locations
+    -> VALUES (
+    -> 2600,
+    -> '9702 Chester Road',
+    -> '09629850293',
+    -> 'Stretford',
+    -> 'Manchester',
+    -> 'UK'
+    -> );
+ERROR 1062 (23000): Duplicate entry '2600' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO locations
+    -> VALUES (
+    -> 2700,
+    -> 'Schwanthalerstr. 7031',
+    -> '80925',
+    -> 'Munich',
+    -> 'Bavaria',
+    -> 'DE'
+    -> );
+ERROR 1062 (23000): Duplicate entry '2700' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO locations
+    -> VALUES (
+    -> 2800,
+    -> 'Rua Frei Caneca 1360 ',
+    -> '01307-002',
+    -> 'Sao Paulo',
+    -> 'Sao Paulo',
+    -> 'BR'
+    -> );
+ERROR 1062 (23000): Duplicate entry '2800' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO locations
+    -> VALUES (
+    -> 2900,
+    -> '20 Rue des Corps-Saints',
+    -> '1730',
+    -> 'Geneva',
+    -> 'Geneve',
+    -> 'CH'
+    -> );
+ERROR 1062 (23000): Duplicate entry '2900' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO locations
+    -> VALUES (
+    -> 3000,
+    -> 'Murtenstrasse 921',
+    -> '3095',
+    -> 'Bern',
+    -> 'BE',
+    -> 'CH'
+    -> );
+ERROR 1062 (23000): Duplicate entry '3000' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO locations
+    -> VALUES (
+    -> 3100,
+    -> 'Pieter Breughelstraat 837',
+    -> '3029SK',
+    -> 'Utrecht',
+    -> 'Utrecht',
+    -> 'NL'
+    -> );
+ERROR 1062 (23000): Duplicate entry '3100' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO locations
+    -> VALUES (
+    -> 3200,
+    -> 'Mariano Escobedo 9991',
+    -> '11932',
+    -> 'Mexico City',
+    -> 'Distrito Federal,',
+    -> 'MX'
+    -> );
+ERROR 1062 (23000): Duplicate entry '3200' for key 'PRIMARY'
+mysql>
+mysql> COMMIT;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql>
+mysql> SET FOREIGN_KEY_CHECKS = 0;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql>
+mysql> INSERT INTO departments
+    -> VALUES (
+    -> 10,
+    -> 'Administration',
+    -> 200,
+    -> 1700
+    -> );
+ERROR 1062 (23000): Duplicate entry '10' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO departments
+    -> VALUES (
+    -> 20,
+    -> 'Marketing',
+    -> 201,
+    -> 1800
+    -> );
+ERROR 1062 (23000): Duplicate entry '20' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO departments
+    -> VALUES (
+    -> 30,
+    -> 'Purchasing',
+    -> 114,
+    -> 1700
+    -> );
+ERROR 1062 (23000): Duplicate entry '30' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO departments
+    -> VALUES (
+    -> 40,
+    -> 'Human Resources',
+    -> 203,
+    -> 2400
+    -> );
+ERROR 1062 (23000): Duplicate entry '40' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO departments
+    -> VALUES (
+    -> 50,
+    -> 'Shipping',
+    -> 121,
+    -> 1500
+    -> );
+ERROR 1062 (23000): Duplicate entry '50' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO departments
+    -> VALUES (
+    -> 60,
+    -> 'IT',
+    -> 103,
+    -> 1400
+    -> );
+ERROR 1062 (23000): Duplicate entry '60' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO departments
+    -> VALUES (
+    -> 70,
+    -> 'Public Relations',
+    -> 204,
+    -> 2700
+    -> );
+ERROR 1062 (23000): Duplicate entry '70' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO departments
+    -> VALUES (
+    -> 80,
+    -> 'Sales',
+    -> 145,
+    -> 2500
+    -> );
+ERROR 1062 (23000): Duplicate entry '80' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO departments
+    -> VALUES (
+    -> 90,
+    -> 'Executive',
+    -> 100,
+    -> 1700
+    -> );
+ERROR 1062 (23000): Duplicate entry '90' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO departments
+    -> VALUES (
+    -> 100,
+    -> 'Finance',
+    -> 108,
+    -> 1700
+    -> );
+ERROR 1062 (23000): Duplicate entry '100' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO departments
+    -> VALUES (
+    -> 110,
+    -> 'Accounting',
+    -> 205,
+    -> 1700
+    -> );
+ERROR 1062 (23000): Duplicate entry '110' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO departments
+    -> VALUES (
+    -> 120,
+    -> 'Treasury',
+    -> NULL,
+    -> 1700
+    -> );
+ERROR 1062 (23000): Duplicate entry '120' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO departments
+    -> VALUES (
+    -> 130,
+    -> 'Corporate Tax',
+    -> NULL,
+    -> 1700
+    -> );
+ERROR 1062 (23000): Duplicate entry '130' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO departments
+    -> VALUES (
+    -> 140,
+    -> 'Control And Credit',
+    -> NULL,
+    -> 1700
+    -> );
+ERROR 1062 (23000): Duplicate entry '140' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO departments
+    -> VALUES (
+    -> 150,
+    -> 'Shareholder Services',
+    -> NULL,
+    -> 1700
+    -> );
+ERROR 1062 (23000): Duplicate entry '150' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO departments
+    -> VALUES (
+    -> 160,
+    -> 'Benefits',
+    -> NULL,
+    -> 1700
+    -> );
+ERROR 1062 (23000): Duplicate entry '160' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO departments
+    -> VALUES (
+    -> 170,
+    -> 'Manufacturing',
+    -> NULL,
+    -> 1700
+    -> );
+ERROR 1062 (23000): Duplicate entry '170' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO departments
+    -> VALUES (
+    -> 180,
+    -> 'Construction',
+    -> NULL,
+    -> 1700
+    -> );
+ERROR 1062 (23000): Duplicate entry '180' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO departments
+    -> VALUES (
+    -> 190,
+    -> 'Contracting',
+    -> NULL,
+    -> 1700
+    -> );
+ERROR 1062 (23000): Duplicate entry '190' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO departments
+    -> VALUES (
+    -> 200,
+    -> 'Operations',
+    -> NULL,
+    -> 1700
+    -> );
+ERROR 1062 (23000): Duplicate entry '200' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO departments
+    -> VALUES (
+    -> 210,
+    -> 'IT Support',
+    -> NULL,
+    -> 1700
+    -> );
+ERROR 1062 (23000): Duplicate entry '210' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO departments
+    -> VALUES (
+    -> 220,
+    -> 'NOC',
+    -> NULL,
+    -> 1700
+    -> );
+ERROR 1062 (23000): Duplicate entry '220' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO departments
+    -> VALUES (
+    -> 230,
+    -> 'IT Helpdesk',
+    -> NULL,
+    -> 1700
+    -> );
+ERROR 1062 (23000): Duplicate entry '230' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO departments
+    -> VALUES (
+    -> 240,
+    -> 'Government Sales',
+    -> NULL,
+    -> 1700
+    -> );
+ERROR 1062 (23000): Duplicate entry '240' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO departments
+    -> VALUES (
+    -> 250,
+    -> 'Retail Sales',
+    -> NULL,
+    -> 1700
+    -> );
+ERROR 1062 (23000): Duplicate entry '250' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO departments
+    -> VALUES (
+    -> 260,
+    -> 'Recruiting',
+    -> NULL,
+    -> 1700
+    -> );
+ERROR 1062 (23000): Duplicate entry '260' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO departments
+    -> VALUES (
+    -> 270,
+    -> 'Payroll',
+    -> NULL,
+    -> 1700
+    -> );
+ERROR 1062 (23000): Duplicate entry '270' for key 'PRIMARY'
+mysql>
+mysql> SET FOREIGN_KEY_CHECKS = 1;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql>
+mysql> COMMIT;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql>
+mysql> INSERT INTO jobs
+    -> VALUES (
+    -> 'AD_PRES',
+    -> 'President',
+    -> 20000,
+    -> 40000
+    -> );
+ERROR 1062 (23000): Duplicate entry 'AD_PRES' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO jobs
+    -> VALUES (
+    -> 'AD_VP',
+    -> 'Administration Vice President',
+    -> 15000,
+    -> 30000
+    -> );
+ERROR 1062 (23000): Duplicate entry 'AD_VP' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO jobs
+    -> VALUES (
+    -> 'AD_ASST',
+    -> 'Administration Assistant',
+    -> 3000,
+    -> 6000
+    -> );
+ERROR 1062 (23000): Duplicate entry 'AD_ASST' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO jobs
+    -> VALUES (
+    -> 'FI_MGR',
+    -> 'Finance Manager',
+    -> 8200,
+    -> 16000
+    -> );
+ERROR 1062 (23000): Duplicate entry 'FI_MGR' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO jobs
+    -> VALUES (
+    -> 'FI_ACCOUNT',
+    -> 'Accountant',
+    -> 4200,
+    -> 9000
+    -> );
+ERROR 1062 (23000): Duplicate entry 'FI_ACCOUNT' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO jobs
+    -> VALUES (
+    -> 'AC_MGR',
+    -> 'Accounting Manager',
+    -> 8200,
+    -> 16000
+    -> );
+ERROR 1062 (23000): Duplicate entry 'AC_MGR' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO jobs
+    -> VALUES (
+    -> 'AC_ACCOUNT',
+    -> 'Public Accountant',
+    -> 4200,
+    -> 9000
+    -> );
+ERROR 1062 (23000): Duplicate entry 'AC_ACCOUNT' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO jobs
+    -> VALUES (
+    -> 'SA_MAN',
+    -> 'Sales Manager',
+    -> 10000,
+    -> 20000
+    -> );
+ERROR 1062 (23000): Duplicate entry 'SA_MAN' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO jobs
+    -> VALUES (
+    -> 'SA_REP',
+    -> 'Sales Representative',
+    -> 6000,
+    -> 12000
+    -> );
+ERROR 1062 (23000): Duplicate entry 'SA_REP' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO jobs
+    -> VALUES (
+    -> 'PU_MAN',
+    -> 'Purchasing Manager',
+    -> 8000,
+    -> 15000
+    -> );
+ERROR 1062 (23000): Duplicate entry 'PU_MAN' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO jobs
+    -> VALUES (
+    -> 'PU_CLERK',
+    -> 'Purchasing Clerk',
+    -> 2500,
+    -> 5500
+    -> );
+ERROR 1062 (23000): Duplicate entry 'PU_CLERK' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO jobs
+    -> VALUES (
+    -> 'ST_MAN',
+    -> 'Stock Manager',
+    -> 5500,
+    -> 8500
+    -> );
+ERROR 1062 (23000): Duplicate entry 'ST_MAN' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO jobs
+    -> VALUES (
+    -> 'ST_CLERK',
+    -> 'Stock Clerk',
+    -> 2000,
+    -> 5000
+    -> );
+ERROR 1062 (23000): Duplicate entry 'ST_CLERK' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO jobs
+    -> VALUES (
+    -> 'SH_CLERK',
+    -> 'Shipping Clerk',
+    -> 2500,
+    -> 5500
+    -> );
+ERROR 1062 (23000): Duplicate entry 'SH_CLERK' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO jobs
+    -> VALUES (
+    -> 'IT_PROG',
+    -> 'Programmer',
+    -> 4000,
+    -> 10000
+    -> );
+ERROR 1062 (23000): Duplicate entry 'IT_PROG' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO jobs
+    -> VALUES (
+    -> 'MK_MAN',
+    -> 'Marketing Manager',
+    -> 9000,
+    -> 15000
+    -> );
+ERROR 1062 (23000): Duplicate entry 'MK_MAN' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO jobs
+    -> VALUES (
+    -> 'MK_REP',
+    -> 'Marketing Representative',
+    -> 4000,
+    -> 9000
+    -> );
+ERROR 1062 (23000): Duplicate entry 'MK_REP' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO jobs
+    -> VALUES (
+    -> 'HR_REP',
+    -> 'Human Resources Representative',
+    -> 4000,
+    -> 9000
+    -> );
+ERROR 1062 (23000): Duplicate entry 'HR_REP' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO jobs
+    -> VALUES (
+    -> 'PR_REP',
+    -> 'Public Relations Representative',
+    -> 4500,
+    -> 10500
+    -> );
+ERROR 1062 (23000): Duplicate entry 'PR_REP' for key 'PRIMARY'
+mysql>
+mysql> COMMIT;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 100,
+    -> 'Steven',
+    -> 'King',
+    -> 'SKING',
+    -> '515.123.4567',
+    -> STR_TO_DATE('17-JUN-1987', '%d-%M-%Y'),
+    -> 'AD_PRES',
+    -> 24000,
+    -> NULL,
+    -> NULL,
+    -> 90
+    -> );
+ERROR 1062 (23000): Duplicate entry '100' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 101,
+    -> 'Neena',
+    -> 'Kochhar',
+    -> 'NKOCHHAR',
+    -> '515.123.4568',
+    -> STR_TO_DATE('21-SEP-1989', '%d-%M-%Y'),
+    -> 'AD_VP',
+    -> 17000,
+    -> NULL,
+    -> 100,
+    -> 90
+    -> );
+ERROR 1062 (23000): Duplicate entry '101' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 102,
+    -> 'Lex',
+    -> 'De Haan',
+    -> 'LDEHAAN',
+    -> '515.123.4569',
+    -> STR_TO_DATE('13-JAN-1993', '%d-%M-%Y'),
+    -> 'AD_VP',
+    -> 17000,
+    -> NULL,
+    -> 100,
+    -> 90
+    -> );
+ERROR 1062 (23000): Duplicate entry '102' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 103,
+    -> 'Alexander',
+    -> 'Hunold',
+    -> 'AHUNOLD',
+    -> '590.423.4567',
+    -> STR_TO_DATE('03-JAN-1990', '%d-%M-%Y'),
+    -> 'IT_PROG',
+    -> 9000,
+    -> NULL,
+    -> 102,
+    -> 60
+    -> );
+ERROR 1062 (23000): Duplicate entry '103' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 104,
+    -> 'Bruce',
+    -> 'Ernst',
+    -> 'BERNST',
+    -> '590.423.4568',
+    -> STR_TO_DATE('21-MAY-1991', '%d-%M-%Y'),
+    -> 'IT_PROG',
+    -> 6000,
+    -> NULL,
+    -> 103,
+    -> 60
+    -> );
+ERROR 1062 (23000): Duplicate entry '104' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 105,
+    -> 'David',
+    -> 'Austin',
+    -> 'DAUSTIN',
+    -> '590.423.4569',
+    -> STR_TO_DATE('25-JUN-1997', '%d-%M-%Y'),
+    -> 'IT_PROG',
+    -> 4800,
+    -> NULL,
+    -> 103,
+    -> 60
+    -> );
+ERROR 1062 (23000): Duplicate entry '105' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 106,
+    -> 'Valli',
+    -> 'Pataballa',
+    -> 'VPATABAL',
+    -> '590.423.4560',
+    -> STR_TO_DATE('05-FEB-1998', '%d-%M-%Y'),
+    -> 'IT_PROG',
+    -> 4800,
+    -> NULL,
+    -> 103,
+    -> 60
+    -> );
+ERROR 1062 (23000): Duplicate entry '106' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 107,
+    -> 'Diana',
+    -> 'Lorentz',
+    -> 'DLORENTZ',
+    -> '590.423.5567',
+    -> STR_TO_DATE('07-FEB-1999', '%d-%M-%Y'),
+    -> 'IT_PROG',
+    -> 4200,
+    -> NULL,
+    -> 103,
+    -> 60
+    -> );
+ERROR 1062 (23000): Duplicate entry '107' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 108,
+    -> 'Nancy',
+    -> 'Greenberg',
+    -> 'NGREENBE',
+    -> '515.124.4569',
+    -> STR_TO_DATE('17-AUG-1994', '%d-%M-%Y'),
+    -> 'FI_MGR',
+    -> 12000,
+    -> NULL,
+    -> 101,
+    -> 100
+    -> );
+ERROR 1062 (23000): Duplicate entry '108' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 109,
+    -> 'Daniel',
+    -> 'Faviet',
+    -> 'DFAVIET',
+    -> '515.124.4169',
+    -> STR_TO_DATE('16-AUG-1994', '%d-%M-%Y'),
+    -> 'FI_ACCOUNT',
+    -> 9000,
+    -> NULL,
+    -> 108,
+    -> 100
+    -> );
+ERROR 1062 (23000): Duplicate entry '109' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 110,
+    -> 'John',
+    -> 'Chen',
+    -> 'JCHEN',
+    -> '515.124.4269',
+    -> STR_TO_DATE('28-SEP-1997', '%d-%M-%Y'),
+    -> 'FI_ACCOUNT',
+    -> 8200,
+    -> NULL,
+    -> 108,
+    -> 100
+    -> );
+ERROR 1062 (23000): Duplicate entry '110' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 111,
+    -> 'Ismael',
+    -> 'Sciarra',
+    -> 'ISCIARRA',
+    -> '515.124.4369',
+    -> STR_TO_DATE('30-SEP-1997', '%d-%M-%Y'),
+    -> 'FI_ACCOUNT',
+    -> 7700,
+    -> NULL,
+    -> 108,
+    -> 100
+    -> );
+ERROR 1062 (23000): Duplicate entry '111' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 112,
+    -> 'Jose Manuel',
+    -> 'Urman',
+    -> 'JMURMAN',
+    -> '515.124.4469',
+    -> STR_TO_DATE('07-MAR-1998', '%d-%M-%Y'),
+    -> 'FI_ACCOUNT',
+    -> 7800,
+    -> NULL,
+    -> 108,
+    -> 100
+    -> );
+ERROR 1062 (23000): Duplicate entry '112' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 113,
+    -> 'Luis',
+    -> 'Popp',
+    -> 'LPOPP',
+    -> '515.124.4567',
+    -> STR_TO_DATE('07-DEC-1999', '%d-%M-%Y'),
+    -> 'FI_ACCOUNT',
+    -> 6900,
+    -> NULL,
+    -> 108,
+    -> 100
+    -> );
+ERROR 1062 (23000): Duplicate entry '113' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 114,
+    -> 'Den',
+    -> 'Raphaely',
+    -> 'DRAPHEAL',
+    -> '515.127.4561',
+    -> STR_TO_DATE('07-DEC-1994', '%d-%M-%Y'),
+    -> 'PU_MAN',
+    -> 11000,
+    -> NULL,
+    -> 100,
+    -> 30
+    -> );
+ERROR 1062 (23000): Duplicate entry '114' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 115,
+    -> 'Alexander',
+    -> 'Khoo',
+    -> 'AKHOO',
+    -> '515.127.4562',
+    -> STR_TO_DATE('18-MAY-1995', '%d-%M-%Y'),
+    -> 'PU_CLERK',
+    -> 3100,
+    -> NULL,
+    -> 114,
+    -> 30
+    -> );
+ERROR 1062 (23000): Duplicate entry '115' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 116,
+    -> 'Shelli',
+    -> 'Baida',
+    -> 'SBAIDA',
+    -> '515.127.4563',
+    -> STR_TO_DATE('24-DEC-1997', '%d-%M-%Y'),
+    -> 'PU_CLERK',
+    -> 2900,
+    -> NULL,
+    -> 114,
+    -> 30
+    -> );
+ERROR 1062 (23000): Duplicate entry '116' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 117,
+    -> 'Sigal',
+    -> 'Tobias',
+    -> 'STOBIAS',
+    -> '515.127.4564',
+    -> STR_TO_DATE('24-JUL-1997', '%d-%M-%Y'),
+    -> 'PU_CLERK',
+    -> 2800,
+    -> NULL,
+    -> 114,
+    -> 30
+    -> );
+ERROR 1062 (23000): Duplicate entry '117' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 118,
+    -> 'Guy',
+    -> 'Himuro',
+    -> 'GHIMURO',
+    -> '515.127.4565',
+    -> STR_TO_DATE('15-NOV-1998', '%d-%M-%Y'),
+    -> 'PU_CLERK',
+    -> 2600,
+    -> NULL,
+    -> 114,
+    -> 30
+    -> );
+ERROR 1062 (23000): Duplicate entry '118' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 119,
+    -> 'Karen',
+    -> 'Colmenares',
+    -> 'KCOLMENA',
+    -> '515.127.4566',
+    -> STR_TO_DATE('10-AUG-1999', '%d-%M-%Y'),
+    -> 'PU_CLERK',
+    -> 2500,
+    -> NULL,
+    -> 114,
+    -> 30
+    -> );
+ERROR 1062 (23000): Duplicate entry '119' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 120,
+    -> 'Matthew',
+    -> 'Weiss',
+    -> 'MWEISS',
+    -> '650.123.1234',
+    -> STR_TO_DATE('18-JUL-1996', '%d-%M-%Y'),
+    -> 'ST_MAN',
+    -> 8000,
+    -> NULL,
+    -> 100,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '120' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 121,
+    -> 'Adam',
+    -> 'Fripp',
+    -> 'AFRIPP',
+    -> '650.123.2234',
+    -> STR_TO_DATE('10-APR-1997', '%d-%M-%Y'),
+    -> 'ST_MAN',
+    -> 8200,
+    -> NULL,
+    -> 100,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '121' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 122,
+    -> 'Payam',
+    -> 'Kaufling',
+    -> 'PKAUFLIN',
+    -> '650.123.3234',
+    -> STR_TO_DATE('01-MAY-1995', '%d-%M-%Y'),
+    -> 'ST_MAN',
+    -> 7900,
+    -> NULL,
+    -> 100,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '122' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 123,
+    -> 'Shanta',
+    -> 'Vollman',
+    -> 'SVOLLMAN',
+    -> '650.123.4234',
+    -> STR_TO_DATE('10-OCT-1997', '%d-%M-%Y'),
+    -> 'ST_MAN',
+    -> 6500,
+    -> NULL,
+    -> 100,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '123' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 124,
+    -> 'Kevin',
+    -> 'Mourgos',
+    -> 'KMOURGOS',
+    -> '650.123.5234',
+    -> STR_TO_DATE('16-NOV-1999', '%d-%M-%Y'),
+    -> 'ST_MAN',
+    -> 5800,
+    -> NULL,
+    -> 100,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '124' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 125,
+    -> 'Julia',
+    -> 'Nayer',
+    -> 'JNAYER',
+    -> '650.124.1214',
+    -> STR_TO_DATE('16-JUL-1997', '%d-%M-%Y'),
+    -> 'ST_CLERK',
+    -> 3200,
+    -> NULL,
+    -> 120,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '125' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 126,
+    -> 'Irene',
+    -> 'Mikkilineni',
+    -> 'IMIKKILI',
+    -> '650.124.1224',
+    -> STR_TO_DATE('28-SEP-1998', '%d-%M-%Y'),
+    -> 'ST_CLERK',
+    -> 2700,
+    -> NULL,
+    -> 120,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '126' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 127,
+    -> 'James',
+    -> 'Landry',
+    -> 'JLANDRY',
+    -> '650.124.1334',
+    -> STR_TO_DATE('14-JAN-1999', '%d-%M-%Y'),
+    -> 'ST_CLERK',
+    -> 2400,
+    -> NULL,
+    -> 120,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '127' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 128,
+    -> 'Steven',
+    -> 'Markle',
+    -> 'SMARKLE',
+    -> '650.124.1434',
+    -> STR_TO_DATE('08-MAR-2000', '%d-%M-%Y'),
+    -> 'ST_CLERK',
+    -> 2200,
+    -> NULL,
+    -> 120,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '128' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 129,
+    -> 'Laura',
+    -> 'Bissot',
+    -> 'LBISSOT',
+    -> '650.124.5234',
+    -> STR_TO_DATE('20-AUG-1997', '%d-%M-%Y'),
+    -> 'ST_CLERK',
+    -> 3300,
+    -> NULL,
+    -> 121,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '129' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 130,
+    -> 'Mozhe',
+    -> 'Atkinson',
+    -> 'MATKINSO',
+    -> '650.124.6234',
+    -> STR_TO_DATE('30-OCT-1997', '%d-%M-%Y'),
+    -> 'ST_CLERK',
+    -> 2800,
+    -> NULL,
+    -> 121,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '130' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 131,
+    -> 'James',
+    -> 'Marlow',
+    -> 'JAMRLOW',
+    -> '650.124.7234',
+    -> STR_TO_DATE('16-FEB-1997', '%d-%M-%Y'),
+    -> 'ST_CLERK',
+    -> 2500,
+    -> NULL,
+    -> 121,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '131' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 132,
+    -> 'TJ',
+    -> 'Olson',
+    -> 'TJOLSON',
+    -> '650.124.8234',
+    -> STR_TO_DATE('10-APR-1999', '%d-%M-%Y'),
+    -> 'ST_CLERK',
+    -> 2100,
+    -> NULL,
+    -> 121,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '132' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 133,
+    -> 'Jason',
+    -> 'Mallin',
+    -> 'JMALLIN',
+    -> '650.127.1934',
+    -> STR_TO_DATE('14-JUN-1996', '%d-%M-%Y'),
+    -> 'ST_CLERK',
+    -> 3300,
+    -> NULL,
+    -> 122,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '133' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 134,
+    -> 'Michael',
+    -> 'Rogers',
+    -> 'MROGERS',
+    -> '650.127.1834',
+    -> STR_TO_DATE('26-AUG-1998', '%d-%M-%Y'),
+    -> 'ST_CLERK',
+    -> 2900,
+    -> NULL,
+    -> 122,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '134' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 135,
+    -> 'Ki',
+    -> 'Gee',
+    -> 'KGEE',
+    -> '650.127.1734',
+    -> STR_TO_DATE('12-DEC-1999', '%d-%M-%Y'),
+    -> 'ST_CLERK',
+    -> 2400,
+    -> NULL,
+    -> 122,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '135' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 136,
+    -> 'Hazel',
+    -> 'Philtanker',
+    -> 'HPHILTAN',
+    -> '650.127.1634',
+    -> STR_TO_DATE('06-FEB-2000', '%d-%M-%Y'),
+    -> 'ST_CLERK',
+    -> 2200,
+    -> NULL,
+    -> 122,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '136' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 137,
+    -> 'Renske',
+    -> 'Ladwig',
+    -> 'RLADWIG',
+    -> '650.121.1234',
+    -> STR_TO_DATE('14-JUL-1995', '%d-%M-%Y'),
+    -> 'ST_CLERK',
+    -> 3600,
+    -> NULL,
+    -> 123,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '137' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 138,
+    -> 'Stephen',
+    -> 'Stiles',
+    -> 'SSTILES',
+    -> '650.121.2034',
+    -> STR_TO_DATE('26-OCT-1997', '%d-%M-%Y'),
+    -> 'ST_CLERK',
+    -> 3200,
+    -> NULL,
+    -> 123,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '138' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 139,
+    -> 'John',
+    -> 'Seo',
+    -> 'JSEO',
+    -> '650.121.2019',
+    -> STR_TO_DATE('12-FEB-1998', '%d-%M-%Y'),
+    -> 'ST_CLERK',
+    -> 2700,
+    -> NULL,
+    -> 123,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '139' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 140,
+    -> 'Joshua',
+    -> 'Patel',
+    -> 'JPATEL',
+    -> '650.121.1834',
+    -> STR_TO_DATE('06-APR-1998', '%d-%M-%Y'),
+    -> 'ST_CLERK',
+    -> 2500,
+    -> NULL,
+    -> 123,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '140' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 141,
+    -> 'Trenna',
+    -> 'Rajs',
+    -> 'TRAJS',
+    -> '650.121.8009',
+    -> STR_TO_DATE('17-OCT-1995', '%d-%M-%Y'),
+    -> 'ST_CLERK',
+    -> 3500,
+    -> NULL,
+    -> 124,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '141' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 142,
+    -> 'Curtis',
+    -> 'Davies',
+    -> 'CDAVIES',
+    -> '650.121.2994',
+    -> STR_TO_DATE('29-JAN-1997', '%d-%M-%Y'),
+    -> 'ST_CLERK',
+    -> 3100,
+    -> NULL,
+    -> 124,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '142' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 143,
+    -> 'Randall',
+    -> 'Matos',
+    -> 'RMATOS',
+    -> '650.121.2874',
+    -> STR_TO_DATE('15-MAR-1998', '%d-%M-%Y'),
+    -> 'ST_CLERK',
+    -> 2600,
+    -> NULL,
+    -> 124,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '143' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 144,
+    -> 'Peter',
+    -> 'Vargas',
+    -> 'PVARGAS',
+    -> '650.121.2004',
+    -> STR_TO_DATE('09-JUL-1998', '%d-%M-%Y'),
+    -> 'ST_CLERK',
+    -> 2500,
+    -> NULL,
+    -> 124,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '144' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 145,
+    -> 'John',
+    -> 'Russell',
+    -> 'JRUSSEL',
+    -> '011.44.1344.429268',
+    -> STR_TO_DATE('01-OCT-1996', '%d-%M-%Y'),
+    -> 'SA_MAN',
+    -> 14000,
+    -> .4,
+    -> 100,
+    -> 80
+    -> );
+ERROR 1062 (23000): Duplicate entry '145' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 146,
+    -> 'Karen',
+    -> 'Partners',
+    -> 'KPARTNER',
+    -> '011.44.1344.467268',
+    -> STR_TO_DATE('05-JAN-1997', '%d-%M-%Y'),
+    -> 'SA_MAN',
+    -> 13500,
+    -> .3,
+    -> 100,
+    -> 80
+    -> );
+ERROR 1062 (23000): Duplicate entry '146' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 147,
+    -> 'Alberto',
+    -> 'Errazuriz',
+    -> 'AERRAZUR',
+    -> '011.44.1344.429278',
+    -> STR_TO_DATE('10-MAR-1997', '%d-%M-%Y'),
+    -> 'SA_MAN',
+    -> 12000,
+    -> .3,
+    -> 100,
+    -> 80
+    -> );
+ERROR 1062 (23000): Duplicate entry '147' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 148,
+    -> 'Gerald',
+    -> 'Cambrault',
+    -> 'GCAMBRAU',
+    -> '011.44.1344.619268',
+    -> STR_TO_DATE('15-OCT-1999', '%d-%M-%Y'),
+    -> 'SA_MAN',
+    -> 11000,
+    -> .3,
+    -> 100,
+    -> 80
+    -> );
+ERROR 1062 (23000): Duplicate entry '148' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 149,
+    -> 'Eleni',
+    -> 'Zlotkey',
+    -> 'EZLOTKEY',
+    -> '011.44.1344.429018',
+    -> STR_TO_DATE('29-JAN-2000', '%d-%M-%Y'),
+    -> 'SA_MAN',
+    -> 10500,
+    -> .2,
+    -> 100,
+    -> 80
+    -> );
+ERROR 1062 (23000): Duplicate entry '149' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 150,
+    -> 'Peter',
+    -> 'Tucker',
+    -> 'PTUCKER',
+    -> '011.44.1344.129268',
+    -> STR_TO_DATE('30-JAN-1997', '%d-%M-%Y'),
+    -> 'SA_REP',
+    -> 10000,
+    -> .3,
+    -> 145,
+    -> 80
+    -> );
+ERROR 1062 (23000): Duplicate entry '150' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 151,
+    -> 'David',
+    -> 'Bernstein',
+    -> 'DBERNSTE',
+    -> '011.44.1344.345268',
+    -> STR_TO_DATE('24-MAR-1997', '%d-%M-%Y'),
+    -> 'SA_REP',
+    -> 9500,
+    -> .25,
+    -> 145,
+    -> 80
+    -> );
+ERROR 1062 (23000): Duplicate entry '151' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 152,
+    -> 'Peter',
+    -> 'Hall',
+    -> 'PHALL',
+    -> '011.44.1344.478968',
+    -> STR_TO_DATE('20-AUG-1997', '%d-%M-%Y'),
+    -> 'SA_REP',
+    -> 9000,
+    -> .25,
+    -> 145,
+    -> 80
+    -> );
+ERROR 1062 (23000): Duplicate entry '152' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 153,
+    -> 'Christopher',
+    -> 'Olsen',
+    -> 'COLSEN',
+    -> '011.44.1344.498718',
+    -> STR_TO_DATE('30-MAR-1998', '%d-%M-%Y'),
+    -> 'SA_REP',
+    -> 8000,
+    -> .2,
+    -> 145,
+    -> 80
+    -> );
+ERROR 1062 (23000): Duplicate entry '153' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 154,
+    -> 'Nanette',
+    -> 'Cambrault',
+    -> 'NCAMBRAU',
+    -> '011.44.1344.987668',
+    -> STR_TO_DATE('09-DEC-1998', '%d-%M-%Y'),
+    -> 'SA_REP',
+    -> 7500,
+    -> .2,
+    -> 145,
+    -> 80
+    -> );
+ERROR 1062 (23000): Duplicate entry '154' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 155,
+    -> 'Oliver',
+    -> 'Tuvault',
+    -> 'OTUVAULT',
+    -> '011.44.1344.486508',
+    -> STR_TO_DATE('23-NOV-1999', '%d-%M-%Y'),
+    -> 'SA_REP',
+    -> 7000,
+    -> .15,
+    -> 145,
+    -> 80
+    -> );
+ERROR 1062 (23000): Duplicate entry '155' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 156,
+    -> 'Janette',
+    -> 'King',
+    -> 'JKING',
+    -> '011.44.1345.429268',
+    -> STR_TO_DATE('30-JAN-1996', '%d-%M-%Y'),
+    -> 'SA_REP',
+    -> 10000,
+    -> .35,
+    -> 146,
+    -> 80
+    -> );
+ERROR 1062 (23000): Duplicate entry '156' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 157,
+    -> 'Patrick',
+    -> 'Sully',
+    -> 'PSULLY',
+    -> '011.44.1345.929268',
+    -> STR_TO_DATE('04-MAR-1996', '%d-%M-%Y'),
+    -> 'SA_REP',
+    -> 9500,
+    -> .35,
+    -> 146,
+    -> 80
+    -> );
+ERROR 1062 (23000): Duplicate entry '157' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 158,
+    -> 'Allan',
+    -> 'McEwen',
+    -> 'AMCEWEN',
+    -> '011.44.1345.829268',
+    -> STR_TO_DATE('01-AUG-1996', '%d-%M-%Y'),
+    -> 'SA_REP',
+    -> 9000,
+    -> .35,
+    -> 146,
+    -> 80
+    -> );
+ERROR 1062 (23000): Duplicate entry '158' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 159,
+    -> 'Lindsey',
+    -> 'Smith',
+    -> 'LSMITH',
+    -> '011.44.1345.729268',
+    -> STR_TO_DATE('10-MAR-1997', '%d-%M-%Y'),
+    -> 'SA_REP',
+    -> 8000,
+    -> .3,
+    -> 146,
+    -> 80
+    -> );
+ERROR 1062 (23000): Duplicate entry '159' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 160,
+    -> 'Louise',
+    -> 'Doran',
+    -> 'LDORAN',
+    -> '011.44.1345.629268',
+    -> STR_TO_DATE('15-DEC-1997', '%d-%M-%Y'),
+    -> 'SA_REP',
+    -> 7500,
+    -> .3,
+    -> 146,
+    -> 80
+    -> );
+ERROR 1062 (23000): Duplicate entry '160' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 161,
+    -> 'Sarath',
+    -> 'Sewall',
+    -> 'SSEWALL',
+    -> '011.44.1345.529268',
+    -> STR_TO_DATE('03-NOV-1998', '%d-%M-%Y'),
+    -> 'SA_REP',
+    -> 7000,
+    -> .25,
+    -> 146,
+    -> 80
+    -> );
+ERROR 1062 (23000): Duplicate entry '161' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 162,
+    -> 'Clara',
+    -> 'Vishney',
+    -> 'CVISHNEY',
+    -> '011.44.1346.129268',
+    -> STR_TO_DATE('11-NOV-1997', '%d-%M-%Y'),
+    -> 'SA_REP',
+    -> 10500,
+    -> .25,
+    -> 147,
+    -> 80
+    -> );
+ERROR 1062 (23000): Duplicate entry '162' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 163,
+    -> 'Danielle',
+    -> 'Greene',
+    -> 'DGREENE',
+    -> '011.44.1346.229268',
+    -> STR_TO_DATE('19-MAR-1999', '%d-%M-%Y'),
+    -> 'SA_REP',
+    -> 9500,
+    -> .15,
+    -> 147,
+    -> 80
+    -> );
+ERROR 1062 (23000): Duplicate entry '163' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 164,
+    -> 'Mattea',
+    -> 'Marvins',
+    -> 'MMARVINS',
+    -> '011.44.1346.329268',
+    -> STR_TO_DATE('24-JAN-2000', '%d-%M-%Y'),
+    -> 'SA_REP',
+    -> 7200,
+    -> .10,
+    -> 147,
+    -> 80
+    -> );
+ERROR 1062 (23000): Duplicate entry '164' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 165,
+    -> 'David',
+    -> 'Lee',
+    -> 'DLEE',
+    -> '011.44.1346.529268',
+    -> STR_TO_DATE('23-FEB-2000', '%d-%M-%Y'),
+    -> 'SA_REP',
+    -> 6800,
+    -> .1,
+    -> 147,
+    -> 80
+    -> );
+ERROR 1062 (23000): Duplicate entry '165' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 166,
+    -> 'Sundar',
+    -> 'Ande',
+    -> 'SANDE',
+    -> '011.44.1346.629268',
+    -> STR_TO_DATE('24-MAR-2000', '%d-%M-%Y'),
+    -> 'SA_REP',
+    -> 6400,
+    -> .10,
+    -> 147,
+    -> 80
+    -> );
+ERROR 1062 (23000): Duplicate entry '166' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 167,
+    -> 'Amit',
+    -> 'Banda',
+    -> 'ABANDA',
+    -> '011.44.1346.729268',
+    -> STR_TO_DATE('21-APR-2000', '%d-%M-%Y'),
+    -> 'SA_REP',
+    -> 6200,
+    -> .10,
+    -> 147,
+    -> 80
+    -> );
+ERROR 1062 (23000): Duplicate entry '167' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 168,
+    -> 'Lisa',
+    -> 'Ozer',
+    -> 'LOZER',
+    -> '011.44.1343.929268',
+    -> STR_TO_DATE('11-MAR-1997', '%d-%M-%Y'),
+    -> 'SA_REP',
+    -> 11500,
+    -> .25,
+    -> 148,
+    -> 80
+    -> );
+ERROR 1062 (23000): Duplicate entry '168' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 169,
+    -> 'Harrison',
+    -> 'Bloom',
+    -> 'HBLOOM',
+    -> '011.44.1343.829268',
+    -> STR_TO_DATE('23-MAR-1998', '%d-%M-%Y'),
+    -> 'SA_REP',
+    -> 10000,
+    -> .20,
+    -> 148,
+    -> 80
+    -> );
+ERROR 1062 (23000): Duplicate entry '169' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 170,
+    -> 'Tayler',
+    -> 'Fox',
+    -> 'TFOX',
+    -> '011.44.1343.729268',
+    -> STR_TO_DATE('24-JAN-1998', '%d-%M-%Y'),
+    -> 'SA_REP',
+    -> 9600,
+    -> .20,
+    -> 148,
+    -> 80
+    -> );
+ERROR 1062 (23000): Duplicate entry '170' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 171,
+    -> 'William',
+    -> 'Smith',
+    -> 'WSMITH',
+    -> '011.44.1343.629268',
+    -> STR_TO_DATE('23-FEB-1999', '%d-%M-%Y'),
+    -> 'SA_REP',
+    -> 7400,
+    -> .15,
+    -> 148,
+    -> 80
+    -> );
+ERROR 1062 (23000): Duplicate entry '171' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 172,
+    -> 'Elizabeth',
+    -> 'Bates',
+    -> 'EBATES',
+    -> '011.44.1343.529268',
+    -> STR_TO_DATE('24-MAR-1999', '%d-%M-%Y'),
+    -> 'SA_REP',
+    -> 7300,
+    -> .15,
+    -> 148,
+    -> 80
+    -> );
+ERROR 1062 (23000): Duplicate entry '172' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 173,
+    -> 'Sundita',
+    -> 'Kumar',
+    -> 'SKUMAR',
+    -> '011.44.1343.329268',
+    -> STR_TO_DATE('21-APR-2000', '%d-%M-%Y'),
+    -> 'SA_REP',
+    -> 6100,
+    -> .10,
+    -> 148,
+    -> 80
+    -> );
+ERROR 1062 (23000): Duplicate entry '173' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 174,
+    -> 'Ellen',
+    -> 'Abel',
+    -> 'EABEL',
+    -> '011.44.1644.429267',
+    -> STR_TO_DATE('11-MAY-1996', '%d-%M-%Y'),
+    -> 'SA_REP',
+    -> 11000,
+    -> .30,
+    -> 149,
+    -> 80
+    -> );
+ERROR 1062 (23000): Duplicate entry '174' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 175,
+    -> 'Alyssa',
+    -> 'Hutton',
+    -> 'AHUTTON',
+    -> '011.44.1644.429266',
+    -> STR_TO_DATE('19-MAR-1997', '%d-%M-%Y'),
+    -> 'SA_REP',
+    -> 8800,
+    -> .25,
+    -> 149,
+    -> 80
+    -> );
+ERROR 1062 (23000): Duplicate entry '175' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 176,
+    -> 'Jonathon',
+    -> 'Taylor',
+    -> 'JTAYLOR',
+    -> '011.44.1644.429265',
+    -> STR_TO_DATE('24-MAR-1998', '%d-%M-%Y'),
+    -> 'SA_REP',
+    -> 8600,
+    -> .20,
+    -> 149,
+    -> 80
+    -> );
+ERROR 1062 (23000): Duplicate entry '176' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 177,
+    -> 'Jack',
+    -> 'Livingston',
+    -> 'JLIVINGS',
+    -> '011.44.1644.429264',
+    -> STR_TO_DATE('23-APR-1998', '%d-%M-%Y'),
+    -> 'SA_REP',
+    -> 8400,
+    -> .20,
+    -> 149,
+    -> 80
+    -> );
+ERROR 1062 (23000): Duplicate entry '177' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 178,
+    -> 'Kimberely',
+    -> 'Grant',
+    -> 'KGRANT',
+    -> '011.44.1644.429263',
+    -> STR_TO_DATE('24-MAY-1999', '%d-%M-%Y'),
+    -> 'SA_REP',
+    -> 7000,
+    -> .15,
+    -> 149,
+    -> NULL
+    -> );
+ERROR 1062 (23000): Duplicate entry '178' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 179,
+    -> 'Charles',
+    -> 'Johnson',
+    -> 'CJOHNSON',
+    -> '011.44.1644.429262',
+    -> STR_TO_DATE('04-JAN-2000', '%d-%M-%Y'),
+    -> 'SA_REP',
+    -> 6200,
+    -> .10,
+    -> 149,
+    -> 80
+    -> );
+ERROR 1062 (23000): Duplicate entry '179' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 180,
+    -> 'Winston',
+    -> 'Taylor',
+    -> 'WTAYLOR',
+    -> '650.507.9876',
+    -> STR_TO_DATE('24-JAN-1998', '%d-%M-%Y'),
+    -> 'SH_CLERK',
+    -> 3200,
+    -> NULL,
+    -> 120,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '180' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 181,
+    -> 'Jean',
+    -> 'Fleaur',
+    -> 'JFLEAUR',
+    -> '650.507.9877',
+    -> STR_TO_DATE('23-FEB-1998', '%d-%M-%Y'),
+    -> 'SH_CLERK',
+    -> 3100,
+    -> NULL,
+    -> 120,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '181' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 182,
+    -> 'Martha',
+    -> 'Sullivan',
+    -> 'MSULLIVA',
+    -> '650.507.9878',
+    -> STR_TO_DATE('21-JUN-1999', '%d-%M-%Y'),
+    -> 'SH_CLERK',
+    -> 2500,
+    -> NULL,
+    -> 120,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '182' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 183,
+    -> 'Girard',
+    -> 'Geoni',
+    -> 'GGEONI',
+    -> '650.507.9879',
+    -> STR_TO_DATE('03-FEB-2000', '%d-%M-%Y'),
+    -> 'SH_CLERK',
+    -> 2800,
+    -> NULL,
+    -> 120,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '183' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 184,
+    -> 'Nandita',
+    -> 'Sarchand',
+    -> 'NSARCHAN',
+    -> '650.509.1876',
+    -> STR_TO_DATE('27-JAN-1996', '%d-%M-%Y'),
+    -> 'SH_CLERK',
+    -> 4200,
+    -> NULL,
+    -> 121,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '184' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 185,
+    -> 'Alexis',
+    -> 'Bull',
+    -> 'ABULL',
+    -> '650.509.2876',
+    -> STR_TO_DATE('20-FEB-1997', '%d-%M-%Y'),
+    -> 'SH_CLERK',
+    -> 4100,
+    -> NULL,
+    -> 121,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '185' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 186,
+    -> 'Julia',
+    -> 'Dellinger',
+    -> 'JDELLING',
+    -> '650.509.3876',
+    -> STR_TO_DATE('24-JUN-1998', '%d-%M-%Y'),
+    -> 'SH_CLERK',
+    -> 3400,
+    -> NULL,
+    -> 121,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '186' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 187,
+    -> 'Anthony',
+    -> 'Cabrio',
+    -> 'ACABRIO',
+    -> '650.509.4876',
+    -> STR_TO_DATE('07-FEB-1999', '%d-%M-%Y'),
+    -> 'SH_CLERK',
+    -> 3000,
+    -> NULL,
+    -> 121,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '187' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 188,
+    -> 'Kelly',
+    -> 'Chung',
+    -> 'KCHUNG',
+    -> '650.505.1876',
+    -> STR_TO_DATE('14-JUN-1997', '%d-%M-%Y'),
+    -> 'SH_CLERK',
+    -> 3800,
+    -> NULL,
+    -> 122,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '188' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 189,
+    -> 'Jennifer',
+    -> 'Dilly',
+    -> 'JDILLY',
+    -> '650.505.2876',
+    -> STR_TO_DATE('13-AUG-1997', '%d-%M-%Y'),
+    -> 'SH_CLERK',
+    -> 3600,
+    -> NULL,
+    -> 122,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '189' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 190,
+    -> 'Timothy',
+    -> 'Gates',
+    -> 'TGATES',
+    -> '650.505.3876',
+    -> STR_TO_DATE('11-JUL-1998', '%d-%M-%Y'),
+    -> 'SH_CLERK',
+    -> 2900,
+    -> NULL,
+    -> 122,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '190' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 191,
+    -> 'Randall',
+    -> 'Perkins',
+    -> 'RPERKINS',
+    -> '650.505.4876',
+    -> STR_TO_DATE('19-DEC-1999', '%d-%M-%Y'),
+    -> 'SH_CLERK',
+    -> 2500,
+    -> NULL,
+    -> 122,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '191' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 192,
+    -> 'Sarah',
+    -> 'Bell',
+    -> 'SBELL',
+    -> '650.501.1876',
+    -> STR_TO_DATE('04-FEB-1996', '%d-%M-%Y'),
+    -> 'SH_CLERK',
+    -> 4000,
+    -> NULL,
+    -> 123,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '192' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 193,
+    -> 'Britney',
+    -> 'Everett',
+    -> 'BEVERETT',
+    -> '650.501.2876',
+    -> STR_TO_DATE('03-MAR-1997', '%d-%M-%Y'),
+    -> 'SH_CLERK',
+    -> 3900,
+    -> NULL,
+    -> 123,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '193' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 194,
+    -> 'Samuel',
+    -> 'McCain',
+    -> 'SMCCAIN',
+    -> '650.501.3876',
+    -> STR_TO_DATE('01-JUL-1998', '%d-%M-%Y'),
+    -> 'SH_CLERK',
+    -> 3200,
+    -> NULL,
+    -> 123,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '194' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 195,
+    -> 'Vance',
+    -> 'Jones',
+    -> 'VJONES',
+    -> '650.501.4876',
+    -> STR_TO_DATE('17-MAR-1999', '%d-%M-%Y'),
+    -> 'SH_CLERK',
+    -> 2800,
+    -> NULL,
+    -> 123,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '195' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 196,
+    -> 'Alana',
+    -> 'Walsh',
+    -> 'AWALSH',
+    -> '650.507.9811',
+    -> STR_TO_DATE('24-APR-1998', '%d-%M-%Y'),
+    -> 'SH_CLERK',
+    -> 3100,
+    -> NULL,
+    -> 124,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '196' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 197,
+    -> 'Kevin',
+    -> 'Feeney',
+    -> 'KFEENEY',
+    -> '650.507.9822',
+    -> STR_TO_DATE('23-MAY-1998', '%d-%M-%Y'),
+    -> 'SH_CLERK',
+    -> 3000,
+    -> NULL,
+    -> 124,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '197' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 198,
+    -> 'Donald',
+    -> 'OConnell',
+    -> 'DOCONNEL',
+    -> '650.507.9833',
+    -> STR_TO_DATE('21-JUN-1999', '%d-%M-%Y'),
+    -> 'SH_CLERK',
+    -> 2600,
+    -> NULL,
+    -> 124,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '198' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 199,
+    -> 'Douglas',
+    -> 'Grant',
+    -> 'DGRANT',
+    -> '650.507.9844',
+    -> STR_TO_DATE('13-JAN-2000', '%d-%M-%Y'),
+    -> 'SH_CLERK',
+    -> 2600,
+    -> NULL,
+    -> 124,
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '199' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 200,
+    -> 'Jennifer',
+    -> 'Whalen',
+    -> 'JWHALEN',
+    -> '515.123.4444',
+    -> STR_TO_DATE('17-SEP-1987', '%d-%M-%Y'),
+    -> 'AD_ASST',
+    -> 4400,
+    -> NULL,
+    -> 101,
+    -> 10
+    -> );
+ERROR 1062 (23000): Duplicate entry '200' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 201,
+    -> 'Michael',
+    -> 'Hartstein',
+    -> 'MHARTSTE',
+    -> '515.123.5555',
+    -> STR_TO_DATE('17-FEB-1996', '%d-%M-%Y'),
+    -> 'MK_MAN',
+    -> 13000,
+    -> NULL,
+    -> 100,
+    -> 20
+    -> );
+ERROR 1062 (23000): Duplicate entry '201' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 202,
+    -> 'Pat',
+    -> 'Fay',
+    -> 'PFAY',
+    -> '603.123.6666',
+    -> STR_TO_DATE('17-AUG-1997', '%d-%M-%Y'),
+    -> 'MK_REP',
+    -> 6000,
+    -> NULL,
+    -> 201,
+    -> 20
+    -> );
+ERROR 1062 (23000): Duplicate entry '202' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 203,
+    -> 'Susan',
+    -> 'Mavris',
+    -> 'SMAVRIS',
+    -> '515.123.7777',
+    -> STR_TO_DATE('07-JUN-1994', '%d-%M-%Y'),
+    -> 'HR_REP',
+    -> 6500,
+    -> NULL,
+    -> 101,
+    -> 40
+    -> );
+ERROR 1062 (23000): Duplicate entry '203' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 204,
+    -> 'Hermann',
+    -> 'Baer',
+    -> 'HBAER',
+    -> '515.123.8888',
+    -> STR_TO_DATE('07-JUN-1994', '%d-%M-%Y'),
+    -> 'PR_REP',
+    -> 10000,
+    -> NULL,
+    -> 101,
+    -> 70
+    -> );
+ERROR 1062 (23000): Duplicate entry '204' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 205,
+    -> 'Shelley',
+    -> 'Higgins',
+    -> 'SHIGGINS',
+    -> '515.123.8080',
+    -> STR_TO_DATE('07-JUN-1994', '%d-%M-%Y'),
+    -> 'AC_MGR',
+    -> 12000,
+    -> NULL,
+    -> 101,
+    -> 110
+    -> );
+ERROR 1062 (23000): Duplicate entry '205' for key 'PRIMARY'
+mysql>
+mysql> INSERT INTO employees
+    -> VALUES (
+    -> 206,
+    -> 'William',
+    -> 'Gietz',
+    -> 'WGIETZ',
+    -> '51hr5.123.8181',
+    -> STR_TO_DATE('07-JUN-1994', '%d-%M-%Y'),
+    -> 'AC_ACCOUNT',
+    -> 8300,
+    -> NULL,
+    -> 205,
+    -> 110
+    -> );
+ERROR 1062 (23000): Duplicate entry '206' for key 'PRIMARY'
+mysql>
+mysql> COMMIT;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql>
+mysql> INSERT INTO job_history
+    -> VALUES (
+    -> 102,
+    -> STR_TO_DATE('13-Jan-1993', '%d-%M-%Y'),
+    -> STR_TO_DATE('24-Jul-1998', '%d-%M-%Y'),
+    -> 'IT_PROG',
+    -> 60
+    -> );
+ERROR 1062 (23000): Duplicate entry '102-1993-01-13' for key 'employee_id'
+mysql>
+mysql> INSERT INTO job_history
+    -> VALUES (
+    -> 101,
+    -> STR_TO_DATE('21-Sep-1989', '%d-%M-%Y'),
+    -> STR_TO_DATE('27-Oct-1993', '%d-%M-%Y'),
+    -> 'AC_ACCOUNT',
+    -> 110
+    -> );
+ERROR 1062 (23000): Duplicate entry '101-1989-09-21' for key 'employee_id'
+mysql>
+mysql> INSERT INTO job_history
+    -> VALUES (
+    -> 101,
+    -> STR_TO_DATE('28-Oct-1993','%d-%M-%Y'),
+    -> STR_TO_DATE('15-Mar-1997','%d-%M-%Y'),
+    -> 'AC_MGR',
+    -> 110
+    -> );
+ERROR 1062 (23000): Duplicate entry '101-1993-10-28' for key 'employee_id'
+mysql>
+mysql> INSERT INTO job_history
+    -> VALUES (
+    -> 201,
+    -> STR_TO_DATE('27-Feb-1996','%d-%M-%Y'),
+    -> STR_TO_DATE('19-Dec-1999','%d-%M-%Y'),
+    -> 'MK_REP',
+    -> 20
+    -> );
+ERROR 1062 (23000): Duplicate entry '201-1996-02-27' for key 'employee_id'
+mysql>
+mysql> INSERT INTO job_history
+    -> VALUES (
+    -> 114,
+    -> STR_TO_DATE('24-Mar-1998','%d-%M-%Y'),
+    -> STR_TO_DATE('31-Dec-1999','%d-%M-%Y'),
+    -> 'ST_CLERK',
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '114-1998-03-24' for key 'employee_id'
+mysql>
+mysql> INSERT INTO job_history
+    -> VALUES (
+    -> 122,
+    -> STR_TO_DATE('01-Jan-1999','%d-%M-%Y'),
+    -> STR_TO_DATE('31-Dec-1999','%d-%M-%Y'),
+    -> 'ST_CLERK',
+    -> 50
+    -> );
+ERROR 1062 (23000): Duplicate entry '122-1999-01-01' for key 'employee_id'
+mysql>
+mysql> INSERT INTO job_history
+    -> VALUES (
+    -> 200,
+    -> STR_TO_DATE('17-Sep-1987','%d-%M-%Y'),
+    -> STR_TO_DATE('17-Jun-1993','%d-%M-%Y'),
+    -> 'AD_ASST',
+    -> 90
+    -> );
+ERROR 1062 (23000): Duplicate entry '200-1987-09-17' for key 'employee_id'
+mysql>
+mysql> INSERT INTO job_history
+    -> VALUES (
+    -> 176,
+    -> STR_TO_DATE('24-Mar-1998','%d-%M-%Y'),
+    -> STR_TO_DATE('31-Dec-1998','%d-%M-%Y'),
+    -> 'SA_REP',
+    -> 80
+    -> );
+ERROR 1062 (23000): Duplicate entry '176-1998-03-24' for key 'employee_id'
+mysql>
+mysql> INSERT INTO job_history
+    -> VALUES (
+    -> 176,
+    -> STR_TO_DATE('01-Jan-1999','%d-%M-%Y'),
+    -> STR_TO_DATE('31-Dec-1999','%d-%M-%Y'),
+    -> 'SA_MAN',
+    -> 80
+    -> );
+ERROR 1062 (23000): Duplicate entry '176-1999-01-01' for key 'employee_id'
+mysql>
+mysql> INSERT INTO job_history
+    -> VALUES (
+    -> 200,
+    -> STR_TO_DATE('01-Jul-1994','%d-%M-%Y'),
+    -> STR_TO_DATE('31-Dec-1998','%d-%M-%Y'),
+    -> 'AC_ACCOUNT',
+    -> 90
+    -> );
+ERROR 1062 (23000): Duplicate entry '200-1994-07-01' for key 'employee_id'
+mysql>
+mysql> COMMIT;
+Query OK, 0 rows affected (0.00 sec)
+
+mysql> use hr:
+ERROR 1049 (42000): Unknown database 'hr:'
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| hr                 |
+| information_schema |
+| mysql              |
+| performance_schema |
+| sakila             |
+| sys                |
+| world              |
++--------------------+
+7 rows in set (0.00 sec)
+
+mysql> select last_name,job_id,department_id,hire_date from employees order by hire_date;
++-------------+------------+---------------+------------+
+| last_name   | job_id     | department_id | hire_date  |
++-------------+------------+---------------+------------+
+| King        | AD_PRES    |            90 | 1987-06-17 |
+| Whalen      | AD_ASST    |            10 | 1987-09-17 |
+| Kochhar     | AD_VP      |            90 | 1989-09-21 |
+| Hunold      | IT_PROG    |            60 | 1990-01-03 |
+| Ernst       | IT_PROG    |            60 | 1991-05-21 |
+| De Haan     | AD_VP      |            90 | 1993-01-13 |
+| Mavris      | HR_REP     |            40 | 1994-06-07 |
+| Baer        | PR_REP     |            70 | 1994-06-07 |
+| Higgins     | AC_MGR     |           110 | 1994-06-07 |
+| Gietz       | AC_ACCOUNT |           110 | 1994-06-07 |
+| Faviet      | FI_ACCOUNT |           100 | 1994-08-16 |
+| Greenberg   | FI_MGR     |           100 | 1994-08-17 |
+| Raphaely    | PU_MAN     |            30 | 1994-12-07 |
+| Kaufling    | ST_MAN     |            50 | 1995-05-01 |
+| Khoo        | PU_CLERK   |            30 | 1995-05-18 |
+| Ladwig      | ST_CLERK   |            50 | 1995-07-14 |
+| Rajs        | ST_CLERK   |            50 | 1995-10-17 |
+| Sarchand    | SH_CLERK   |            50 | 1996-01-27 |
+| King        | SA_REP     |            80 | 1996-01-30 |
+| Bell        | SH_CLERK   |            50 | 1996-02-04 |
+| Hartstein   | MK_MAN     |            20 | 1996-02-17 |
+| Sully       | SA_REP     |            80 | 1996-03-04 |
+| Abel        | SA_REP     |            80 | 1996-05-11 |
+| Mallin      | ST_CLERK   |            50 | 1996-06-14 |
+| Weiss       | ST_MAN     |            50 | 1996-07-18 |
+| McEwen      | SA_REP     |            80 | 1996-08-01 |
+| Russell     | SA_MAN     |            80 | 1996-10-01 |
+| Partners    | SA_MAN     |            80 | 1997-01-05 |
+| Davies      | ST_CLERK   |            50 | 1997-01-29 |
+| Tucker      | SA_REP     |            80 | 1997-01-30 |
+| Marlow      | ST_CLERK   |            50 | 1997-02-16 |
+| Bull        | SH_CLERK   |            50 | 1997-02-20 |
+| Everett     | SH_CLERK   |            50 | 1997-03-03 |
+| Errazuriz   | SA_MAN     |            80 | 1997-03-10 |
+| Smith       | SA_REP     |            80 | 1997-03-10 |
+| Ozer        | SA_REP     |            80 | 1997-03-11 |
+| Hutton      | SA_REP     |            80 | 1997-03-19 |
+| Bernstein   | SA_REP     |            80 | 1997-03-24 |
+| Fripp       | ST_MAN     |            50 | 1997-04-10 |
+| Chung       | SH_CLERK   |            50 | 1997-06-14 |
+| Austin      | IT_PROG    |            60 | 1997-06-25 |
+| Nayer       | ST_CLERK   |            50 | 1997-07-16 |
+| Tobias      | PU_CLERK   |            30 | 1997-07-24 |
+| Dilly       | SH_CLERK   |            50 | 1997-08-13 |
+| Fay         | MK_REP     |            20 | 1997-08-17 |
+| Bissot      | ST_CLERK   |            50 | 1997-08-20 |
+| Hall        | SA_REP     |            80 | 1997-08-20 |
+| Chen        | FI_ACCOUNT |           100 | 1997-09-28 |
+| Sciarra     | FI_ACCOUNT |           100 | 1997-09-30 |
+| Vollman     | ST_MAN     |            50 | 1997-10-10 |
+| Stiles      | ST_CLERK   |            50 | 1997-10-26 |
+| Atkinson    | ST_CLERK   |            50 | 1997-10-30 |
+| Vishney     | SA_REP     |            80 | 1997-11-11 |
+| Doran       | SA_REP     |            80 | 1997-12-15 |
+| Baida       | PU_CLERK   |            30 | 1997-12-24 |
+| Fox         | SA_REP     |            80 | 1998-01-24 |
+| Taylor      | SH_CLERK   |            50 | 1998-01-24 |
+| Pataballa   | IT_PROG    |            60 | 1998-02-05 |
+| Seo         | ST_CLERK   |            50 | 1998-02-12 |
+| Fleaur      | SH_CLERK   |            50 | 1998-02-23 |
+| Urman       | FI_ACCOUNT |           100 | 1998-03-07 |
+| Matos       | ST_CLERK   |            50 | 1998-03-15 |
+| Bloom       | SA_REP     |            80 | 1998-03-23 |
+| Taylor      | SA_REP     |            80 | 1998-03-24 |
+| Olsen       | SA_REP     |            80 | 1998-03-30 |
+| Patel       | ST_CLERK   |            50 | 1998-04-06 |
+| Livingston  | SA_REP     |            80 | 1998-04-23 |
+| Walsh       | SH_CLERK   |            50 | 1998-04-24 |
+| Feeney      | SH_CLERK   |            50 | 1998-05-23 |
+| Dellinger   | SH_CLERK   |            50 | 1998-06-24 |
+| McCain      | SH_CLERK   |            50 | 1998-07-01 |
+| Vargas      | ST_CLERK   |            50 | 1998-07-09 |
+| Gates       | SH_CLERK   |            50 | 1998-07-11 |
+| Rogers      | ST_CLERK   |            50 | 1998-08-26 |
+| Mikkilineni | ST_CLERK   |            50 | 1998-09-28 |
+| Sewall      | SA_REP     |            80 | 1998-11-03 |
+| Himuro      | PU_CLERK   |            30 | 1998-11-15 |
+| Cambrault   | SA_REP     |            80 | 1998-12-09 |
+| Landry      | ST_CLERK   |            50 | 1999-01-14 |
+| Lorentz     | IT_PROG    |            60 | 1999-02-07 |
+| Cabrio      | SH_CLERK   |            50 | 1999-02-07 |
+| Smith       | SA_REP     |            80 | 1999-02-23 |
+| Jones       | SH_CLERK   |            50 | 1999-03-17 |
+| Greene      | SA_REP     |            80 | 1999-03-19 |
+| Bates       | SA_REP     |            80 | 1999-03-24 |
+| Olson       | ST_CLERK   |            50 | 1999-04-10 |
+| Grant       | SA_REP     |          NULL | 1999-05-24 |
+| Sullivan    | SH_CLERK   |            50 | 1999-06-21 |
+| OConnell    | SH_CLERK   |            50 | 1999-06-21 |
+| Colmenares  | PU_CLERK   |            30 | 1999-08-10 |
+| Cambrault   | SA_MAN     |            80 | 1999-10-15 |
+| Mourgos     | ST_MAN     |            50 | 1999-11-16 |
+| Tuvault     | SA_REP     |            80 | 1999-11-23 |
+| Popp        | FI_ACCOUNT |           100 | 1999-12-07 |
+| Gee         | ST_CLERK   |            50 | 1999-12-12 |
+| Perkins     | SH_CLERK   |            50 | 1999-12-19 |
+| Johnson     | SA_REP     |            80 | 2000-01-04 |
+| Grant       | SH_CLERK   |            50 | 2000-01-13 |
+| Marvins     | SA_REP     |            80 | 2000-01-24 |
+| Zlotkey     | SA_MAN     |            80 | 2000-01-29 |
+| Geoni       | SH_CLERK   |            50 | 2000-02-03 |
+| Philtanker  | ST_CLERK   |            50 | 2000-02-06 |
+| Lee         | SA_REP     |            80 | 2000-02-23 |
+| Markle      | ST_CLERK   |            50 | 2000-03-08 |
+| Ande        | SA_REP     |            80 | 2000-03-24 |
+| Banda       | SA_REP     |            80 | 2000-04-21 |
+| Kumar       | SA_REP     |            80 | 2000-04-21 |
++-------------+------------+---------------+------------+
+107 rows in set (0.00 sec)
+
+mysql> select last_name,job_id,department_id,hire_date from employees order by hire_date desc;
++-------------+------------+---------------+------------+
+| last_name   | job_id     | department_id | hire_date  |
++-------------+------------+---------------+------------+
+| Banda       | SA_REP     |            80 | 2000-04-21 |
+| Kumar       | SA_REP     |            80 | 2000-04-21 |
+| Ande        | SA_REP     |            80 | 2000-03-24 |
+| Markle      | ST_CLERK   |            50 | 2000-03-08 |
+| Lee         | SA_REP     |            80 | 2000-02-23 |
+| Philtanker  | ST_CLERK   |            50 | 2000-02-06 |
+| Geoni       | SH_CLERK   |            50 | 2000-02-03 |
+| Zlotkey     | SA_MAN     |            80 | 2000-01-29 |
+| Marvins     | SA_REP     |            80 | 2000-01-24 |
+| Grant       | SH_CLERK   |            50 | 2000-01-13 |
+| Johnson     | SA_REP     |            80 | 2000-01-04 |
+| Perkins     | SH_CLERK   |            50 | 1999-12-19 |
+| Gee         | ST_CLERK   |            50 | 1999-12-12 |
+| Popp        | FI_ACCOUNT |           100 | 1999-12-07 |
+| Tuvault     | SA_REP     |            80 | 1999-11-23 |
+| Mourgos     | ST_MAN     |            50 | 1999-11-16 |
+| Cambrault   | SA_MAN     |            80 | 1999-10-15 |
+| Colmenares  | PU_CLERK   |            30 | 1999-08-10 |
+| Sullivan    | SH_CLERK   |            50 | 1999-06-21 |
+| OConnell    | SH_CLERK   |            50 | 1999-06-21 |
+| Grant       | SA_REP     |          NULL | 1999-05-24 |
+| Olson       | ST_CLERK   |            50 | 1999-04-10 |
+| Bates       | SA_REP     |            80 | 1999-03-24 |
+| Greene      | SA_REP     |            80 | 1999-03-19 |
+| Jones       | SH_CLERK   |            50 | 1999-03-17 |
+| Smith       | SA_REP     |            80 | 1999-02-23 |
+| Lorentz     | IT_PROG    |            60 | 1999-02-07 |
+| Cabrio      | SH_CLERK   |            50 | 1999-02-07 |
+| Landry      | ST_CLERK   |            50 | 1999-01-14 |
+| Cambrault   | SA_REP     |            80 | 1998-12-09 |
+| Himuro      | PU_CLERK   |            30 | 1998-11-15 |
+| Sewall      | SA_REP     |            80 | 1998-11-03 |
+| Mikkilineni | ST_CLERK   |            50 | 1998-09-28 |
+| Rogers      | ST_CLERK   |            50 | 1998-08-26 |
+| Gates       | SH_CLERK   |            50 | 1998-07-11 |
+| Vargas      | ST_CLERK   |            50 | 1998-07-09 |
+| McCain      | SH_CLERK   |            50 | 1998-07-01 |
+| Dellinger   | SH_CLERK   |            50 | 1998-06-24 |
+| Feeney      | SH_CLERK   |            50 | 1998-05-23 |
+| Walsh       | SH_CLERK   |            50 | 1998-04-24 |
+| Livingston  | SA_REP     |            80 | 1998-04-23 |
+| Patel       | ST_CLERK   |            50 | 1998-04-06 |
+| Olsen       | SA_REP     |            80 | 1998-03-30 |
+| Taylor      | SA_REP     |            80 | 1998-03-24 |
+| Bloom       | SA_REP     |            80 | 1998-03-23 |
+| Matos       | ST_CLERK   |            50 | 1998-03-15 |
+| Urman       | FI_ACCOUNT |           100 | 1998-03-07 |
+| Fleaur      | SH_CLERK   |            50 | 1998-02-23 |
+| Seo         | ST_CLERK   |            50 | 1998-02-12 |
+| Pataballa   | IT_PROG    |            60 | 1998-02-05 |
+| Fox         | SA_REP     |            80 | 1998-01-24 |
+| Taylor      | SH_CLERK   |            50 | 1998-01-24 |
+| Baida       | PU_CLERK   |            30 | 1997-12-24 |
+| Doran       | SA_REP     |            80 | 1997-12-15 |
+| Vishney     | SA_REP     |            80 | 1997-11-11 |
+| Atkinson    | ST_CLERK   |            50 | 1997-10-30 |
+| Stiles      | ST_CLERK   |            50 | 1997-10-26 |
+| Vollman     | ST_MAN     |            50 | 1997-10-10 |
+| Sciarra     | FI_ACCOUNT |           100 | 1997-09-30 |
+| Chen        | FI_ACCOUNT |           100 | 1997-09-28 |
+| Bissot      | ST_CLERK   |            50 | 1997-08-20 |
+| Hall        | SA_REP     |            80 | 1997-08-20 |
+| Fay         | MK_REP     |            20 | 1997-08-17 |
+| Dilly       | SH_CLERK   |            50 | 1997-08-13 |
+| Tobias      | PU_CLERK   |            30 | 1997-07-24 |
+| Nayer       | ST_CLERK   |            50 | 1997-07-16 |
+| Austin      | IT_PROG    |            60 | 1997-06-25 |
+| Chung       | SH_CLERK   |            50 | 1997-06-14 |
+| Fripp       | ST_MAN     |            50 | 1997-04-10 |
+| Bernstein   | SA_REP     |            80 | 1997-03-24 |
+| Hutton      | SA_REP     |            80 | 1997-03-19 |
+| Ozer        | SA_REP     |            80 | 1997-03-11 |
+| Errazuriz   | SA_MAN     |            80 | 1997-03-10 |
+| Smith       | SA_REP     |            80 | 1997-03-10 |
+| Everett     | SH_CLERK   |            50 | 1997-03-03 |
+| Bull        | SH_CLERK   |            50 | 1997-02-20 |
+| Marlow      | ST_CLERK   |            50 | 1997-02-16 |
+| Tucker      | SA_REP     |            80 | 1997-01-30 |
+| Davies      | ST_CLERK   |            50 | 1997-01-29 |
+| Partners    | SA_MAN     |            80 | 1997-01-05 |
+| Russell     | SA_MAN     |            80 | 1996-10-01 |
+| McEwen      | SA_REP     |            80 | 1996-08-01 |
+| Weiss       | ST_MAN     |            50 | 1996-07-18 |
+| Mallin      | ST_CLERK   |            50 | 1996-06-14 |
+| Abel        | SA_REP     |            80 | 1996-05-11 |
+| Sully       | SA_REP     |            80 | 1996-03-04 |
+| Hartstein   | MK_MAN     |            20 | 1996-02-17 |
+| Bell        | SH_CLERK   |            50 | 1996-02-04 |
+| King        | SA_REP     |            80 | 1996-01-30 |
+| Sarchand    | SH_CLERK   |            50 | 1996-01-27 |
+| Rajs        | ST_CLERK   |            50 | 1995-10-17 |
+| Ladwig      | ST_CLERK   |            50 | 1995-07-14 |
+| Khoo        | PU_CLERK   |            30 | 1995-05-18 |
+| Kaufling    | ST_MAN     |            50 | 1995-05-01 |
+| Raphaely    | PU_MAN     |            30 | 1994-12-07 |
+| Greenberg   | FI_MGR     |           100 | 1994-08-17 |
+| Faviet      | FI_ACCOUNT |           100 | 1994-08-16 |
+| Mavris      | HR_REP     |            40 | 1994-06-07 |
+| Baer        | PR_REP     |            70 | 1994-06-07 |
+| Higgins     | AC_MGR     |           110 | 1994-06-07 |
+| Gietz       | AC_ACCOUNT |           110 | 1994-06-07 |
+| De Haan     | AD_VP      |            90 | 1993-01-13 |
+| Ernst       | IT_PROG    |            60 | 1991-05-21 |
+| Hunold      | IT_PROG    |            60 | 1990-01-03 |
+| Kochhar     | AD_VP      |            90 | 1989-09-21 |
+| Whalen      | AD_ASST    |            10 | 1987-09-17 |
+| King        | AD_PRES    |            90 | 1987-06-17 |
++-------------+------------+---------------+------------+
+107 rows in set (0.00 sec)
+
+mysql> select last_name,salary from employees where salary not in between 5000 AND 12000;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'between 5000 AND 12000' at line 1
+mysql> select last_name,salary from employees where salary not in 'between 5000 AND 12000';
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near ''between 5000 AND 12000'' at line 1
+mysql> select last_name,salary from employees where salary not in "between 5000 AND 12000";
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '"between 5000 AND 12000"' at line 1
+mysql> select last_name,salary from employees where salary not "between 5000 AND 12000";
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '"between 5000 AND 12000"' at line 1
+mysql> select last_name,salary from employees where salary not between 5000 AND 12000;
++-------------+----------+
+| last_name   | salary   |
++-------------+----------+
+| King        | 24000.00 |
+| Kochhar     | 17000.00 |
+| De Haan     | 17000.00 |
+| Austin      |  4800.00 |
+| Pataballa   |  4800.00 |
+| Lorentz     |  4200.00 |
+| Khoo        |  3100.00 |
+| Baida       |  2900.00 |
+| Tobias      |  2800.00 |
+| Himuro      |  2600.00 |
+| Colmenares  |  2500.00 |
+| Nayer       |  3200.00 |
+| Mikkilineni |  2700.00 |
+| Landry      |  2400.00 |
+| Markle      |  2200.00 |
+| Bissot      |  3300.00 |
+| Atkinson    |  2800.00 |
+| Marlow      |  2500.00 |
+| Olson       |  2100.00 |
+| Mallin      |  3300.00 |
+| Rogers      |  2900.00 |
+| Gee         |  2400.00 |
+| Philtanker  |  2200.00 |
+| Ladwig      |  3600.00 |
+| Stiles      |  3200.00 |
+| Seo         |  2700.00 |
+| Patel       |  2500.00 |
+| Rajs        |  3500.00 |
+| Davies      |  3100.00 |
+| Matos       |  2600.00 |
+| Vargas      |  2500.00 |
+| Russell     | 14000.00 |
+| Partners    | 13500.00 |
+| Taylor      |  3200.00 |
+| Fleaur      |  3100.00 |
+| Sullivan    |  2500.00 |
+| Geoni       |  2800.00 |
+| Sarchand    |  4200.00 |
+| Bull        |  4100.00 |
+| Dellinger   |  3400.00 |
+| Cabrio      |  3000.00 |
+| Chung       |  3800.00 |
+| Dilly       |  3600.00 |
+| Gates       |  2900.00 |
+| Perkins     |  2500.00 |
+| Bell        |  4000.00 |
+| Everett     |  3900.00 |
+| McCain      |  3200.00 |
+| Jones       |  2800.00 |
+| Walsh       |  3100.00 |
+| Feeney      |  3000.00 |
+| OConnell    |  2600.00 |
+| Grant       |  2600.00 |
+| Whalen      |  4400.00 |
+| Hartstein   | 13000.00 |
++-------------+----------+
+55 rows in set (0.00 sec)
+
+mysql> select last_name,job_id,hire_date from employees order by hire_date where last_name= matos or taylor;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'where last_name= matos or taylor' at line 1
+mysql> select last_name,job_id,hire_date from employees order by hire_date where last_name= matos and taylor;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'where last_name= matos and taylor' at line 1
+mysql> select last_name,job_id,hire_date from employees  where last_name= matos and taylor;
+ERROR 1054 (42S22): Unknown column 'matos' in 'where clause'
+mysql> select last_name,job_id,hire_date from employees  where last_name= 'matos and taylor';
+Empty set (0.00 sec)
+
+mysql> select last_name,job_id,hire_date order by from employees  where last_name= 'matos and taylor';
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'from employees  where last_name= 'matos and taylor'' at line 1
+mysql> select last_name,job_id,hire_date from employees order by hire_date asc   where last_name= 'matos and taylor';
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'where last_name= 'matos and taylor'' at line 1
+mysql> select last_name,job_id,hire_date from employees order by hire_date asc where last_name= 'matos and taylor';
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'where last_name= 'matos and taylor'' at line 1
+mysql> select last_name,salary from employees where salary between 5000 and 12000 and department_id in(20 or 50);
+Empty set (0.00 sec)
+
+mysql> select last_name,salary from employees where salary between 5000 and 12000 and department_id in 20 or 50;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '20 or 50' at line 1
+mysql> select last_name,salary from employees where salary between 5000 and 12000 and department_id in(20,50);
++-----------+---------+
+| last_name | salary  |
++-----------+---------+
+| Weiss     | 8000.00 |
+| Fripp     | 8200.00 |
+| Kaufling  | 7900.00 |
+| Vollman   | 6500.00 |
+| Mourgos   | 5800.00 |
+| Fay       | 6000.00 |
++-----------+---------+
+6 rows in set (0.00 sec)
+
+mysql> select last_name,hire_date from employees where hire_date =1994-01-01 between 2020-01-01;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '' at line 1
+mysql> select last_name,hire_date from employees where hire_date like '%94';
+Empty set (0.00 sec)
+
+mysql> select last_name,hire_date from employees where hire_date between '1994'and '2020' ;
+Empty set, 2 warnings (0.00 sec)
+
+mysql> select last_name,hire_date from employees where hire_date between 1994-01-01 and 2020-01-01;
+Empty set, 2 warnings (0.00 sec)
+
+mysql> select last_name,hire_date from employees where hire_date between '1994-06-01' and '2020-01-01';
++-------------+------------+
+| last_name   | hire_date  |
++-------------+------------+
+| Austin      | 1997-06-25 |
+| Pataballa   | 1998-02-05 |
+| Lorentz     | 1999-02-07 |
+| Greenberg   | 1994-08-17 |
+| Faviet      | 1994-08-16 |
+| Chen        | 1997-09-28 |
+| Sciarra     | 1997-09-30 |
+| Urman       | 1998-03-07 |
+| Popp        | 1999-12-07 |
+| Raphaely    | 1994-12-07 |
+| Khoo        | 1995-05-18 |
+| Baida       | 1997-12-24 |
+| Tobias      | 1997-07-24 |
+| Himuro      | 1998-11-15 |
+| Colmenares  | 1999-08-10 |
+| Weiss       | 1996-07-18 |
+| Fripp       | 1997-04-10 |
+| Kaufling    | 1995-05-01 |
+| Vollman     | 1997-10-10 |
+| Mourgos     | 1999-11-16 |
+| Nayer       | 1997-07-16 |
+| Mikkilineni | 1998-09-28 |
+| Landry      | 1999-01-14 |
+| Markle      | 2000-03-08 |
+| Bissot      | 1997-08-20 |
+| Atkinson    | 1997-10-30 |
+| Marlow      | 1997-02-16 |
+| Olson       | 1999-04-10 |
+| Mallin      | 1996-06-14 |
+| Rogers      | 1998-08-26 |
+| Gee         | 1999-12-12 |
+| Philtanker  | 2000-02-06 |
+| Ladwig      | 1995-07-14 |
+| Stiles      | 1997-10-26 |
+| Seo         | 1998-02-12 |
+| Patel       | 1998-04-06 |
+| Rajs        | 1995-10-17 |
+| Davies      | 1997-01-29 |
+| Matos       | 1998-03-15 |
+| Vargas      | 1998-07-09 |
+| Russell     | 1996-10-01 |
+| Partners    | 1997-01-05 |
+| Errazuriz   | 1997-03-10 |
+| Cambrault   | 1999-10-15 |
+| Zlotkey     | 2000-01-29 |
+| Tucker      | 1997-01-30 |
+| Bernstein   | 1997-03-24 |
+| Hall        | 1997-08-20 |
+| Olsen       | 1998-03-30 |
+| Cambrault   | 1998-12-09 |
+| Tuvault     | 1999-11-23 |
+| King        | 1996-01-30 |
+| Sully       | 1996-03-04 |
+| McEwen      | 1996-08-01 |
+| Smith       | 1997-03-10 |
+| Doran       | 1997-12-15 |
+| Sewall      | 1998-11-03 |
+| Vishney     | 1997-11-11 |
+| Greene      | 1999-03-19 |
+| Marvins     | 2000-01-24 |
+| Lee         | 2000-02-23 |
+| Ande        | 2000-03-24 |
+| Banda       | 2000-04-21 |
+| Ozer        | 1997-03-11 |
+| Bloom       | 1998-03-23 |
+| Fox         | 1998-01-24 |
+| Smith       | 1999-02-23 |
+| Bates       | 1999-03-24 |
+| Kumar       | 2000-04-21 |
+| Abel        | 1996-05-11 |
+| Hutton      | 1997-03-19 |
+| Taylor      | 1998-03-24 |
+| Livingston  | 1998-04-23 |
+| Grant       | 1999-05-24 |
+| Johnson     | 2000-01-04 |
+| Taylor      | 1998-01-24 |
+| Fleaur      | 1998-02-23 |
+| Sullivan    | 1999-06-21 |
+| Geoni       | 2000-02-03 |
+| Sarchand    | 1996-01-27 |
+| Bull        | 1997-02-20 |
+| Dellinger   | 1998-06-24 |
+| Cabrio      | 1999-02-07 |
+| Chung       | 1997-06-14 |
+| Dilly       | 1997-08-13 |
+| Gates       | 1998-07-11 |
+| Perkins     | 1999-12-19 |
+| Bell        | 1996-02-04 |
+| Everett     | 1997-03-03 |
+| McCain      | 1998-07-01 |
+| Jones       | 1999-03-17 |
+| Walsh       | 1998-04-24 |
+| Feeney      | 1998-05-23 |
+| OConnell    | 1999-06-21 |
+| Grant       | 2000-01-13 |
+| Hartstein   | 1996-02-17 |
+| Fay         | 1997-08-17 |
+| Mavris      | 1994-06-07 |
+| Baer        | 1994-06-07 |
+| Higgins     | 1994-06-07 |
+| Gietz       | 1994-06-07 |
++-------------+------------+
+101 rows in set (0.00 sec)
+
+mysql> select last_name from employees where last_name '  a';
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near ''  a'' at line 1
+mysql> select last_name from employees where last_name like '__a%';
++-----------+
+| last_name |
++-----------+
+| Grant     |
+| Grant     |
+| Whalen    |
++-----------+
+3 rows in set (0.00 sec)
+
+mysql> select last_name,job_id,salary from employees where job_id=('SA_REP'or 'CT_clerk') and salary not (2500,3500,7000) ;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '(2500,3500,7000)' at line 1
+mysql> select last_name,job_id,salary from employees where job_id=('SA_REP'or 'CT_clerk') and salary not 2500 and 3500 and7000 ;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '2500 and 3500 and7000' at line 1
+mysql> select last_name,job_id,salary from employees where job_id=('SA_REP'or 'CT_clerk') and salary not 2500,3500,7000 ;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '2500,3500,7000' at line 1
+mysql> select last_name,job_id,salary from employees where job_id=('SA_REP'or 'CT_clerk') and salary not in' 2500,3500,7000' ;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '' 2500,3500,7000'' at line 1
+mysql> select last_name,job_id,salary from employees where job_id=('SA_REP'or 'CT_clerk') and salary not in( 2500,3500,7000) ;
++-------------+------------+----------+
+| last_name   | job_id     | salary   |
++-------------+------------+----------+
+| King        | AD_PRES    | 24000.00 |
+| Kochhar     | AD_VP      | 17000.00 |
+| De Haan     | AD_VP      | 17000.00 |
+| Hunold      | IT_PROG    |  9000.00 |
+| Ernst       | IT_PROG    |  6000.00 |
+| Austin      | IT_PROG    |  4800.00 |
+| Pataballa   | IT_PROG    |  4800.00 |
+| Lorentz     | IT_PROG    |  4200.00 |
+| Greenberg   | FI_MGR     | 12000.00 |
+| Faviet      | FI_ACCOUNT |  9000.00 |
+| Chen        | FI_ACCOUNT |  8200.00 |
+| Sciarra     | FI_ACCOUNT |  7700.00 |
+| Urman       | FI_ACCOUNT |  7800.00 |
+| Popp        | FI_ACCOUNT |  6900.00 |
+| Raphaely    | PU_MAN     | 11000.00 |
+| Khoo        | PU_CLERK   |  3100.00 |
+| Baida       | PU_CLERK   |  2900.00 |
+| Tobias      | PU_CLERK   |  2800.00 |
+| Himuro      | PU_CLERK   |  2600.00 |
+| Weiss       | ST_MAN     |  8000.00 |
+| Fripp       | ST_MAN     |  8200.00 |
+| Kaufling    | ST_MAN     |  7900.00 |
+| Vollman     | ST_MAN     |  6500.00 |
+| Mourgos     | ST_MAN     |  5800.00 |
+| Nayer       | ST_CLERK   |  3200.00 |
+| Mikkilineni | ST_CLERK   |  2700.00 |
+| Landry      | ST_CLERK   |  2400.00 |
+| Markle      | ST_CLERK   |  2200.00 |
+| Bissot      | ST_CLERK   |  3300.00 |
+| Atkinson    | ST_CLERK   |  2800.00 |
+| Olson       | ST_CLERK   |  2100.00 |
+| Mallin      | ST_CLERK   |  3300.00 |
+| Rogers      | ST_CLERK   |  2900.00 |
+| Gee         | ST_CLERK   |  2400.00 |
+| Philtanker  | ST_CLERK   |  2200.00 |
+| Ladwig      | ST_CLERK   |  3600.00 |
+| Stiles      | ST_CLERK   |  3200.00 |
+| Seo         | ST_CLERK   |  2700.00 |
+| Davies      | ST_CLERK   |  3100.00 |
+| Matos       | ST_CLERK   |  2600.00 |
+| Russell     | SA_MAN     | 14000.00 |
+| Partners    | SA_MAN     | 13500.00 |
+| Errazuriz   | SA_MAN     | 12000.00 |
+| Cambrault   | SA_MAN     | 11000.00 |
+| Zlotkey     | SA_MAN     | 10500.00 |
+| Tucker      | SA_REP     | 10000.00 |
+| Bernstein   | SA_REP     |  9500.00 |
+| Hall        | SA_REP     |  9000.00 |
+| Olsen       | SA_REP     |  8000.00 |
+| Cambrault   | SA_REP     |  7500.00 |
+| King        | SA_REP     | 10000.00 |
+| Sully       | SA_REP     |  9500.00 |
+| McEwen      | SA_REP     |  9000.00 |
+| Smith       | SA_REP     |  8000.00 |
+| Doran       | SA_REP     |  7500.00 |
+| Vishney     | SA_REP     | 10500.00 |
+| Greene      | SA_REP     |  9500.00 |
+| Marvins     | SA_REP     |  7200.00 |
+| Lee         | SA_REP     |  6800.00 |
+| Ande        | SA_REP     |  6400.00 |
+| Banda       | SA_REP     |  6200.00 |
+| Ozer        | SA_REP     | 11500.00 |
+| Bloom       | SA_REP     | 10000.00 |
+| Fox         | SA_REP     |  9600.00 |
+| Smith       | SA_REP     |  7400.00 |
+| Bates       | SA_REP     |  7300.00 |
+| Kumar       | SA_REP     |  6100.00 |
+| Abel        | SA_REP     | 11000.00 |
+| Hutton      | SA_REP     |  8800.00 |
+| Taylor      | SA_REP     |  8600.00 |
+| Livingston  | SA_REP     |  8400.00 |
+| Johnson     | SA_REP     |  6200.00 |
+| Taylor      | SH_CLERK   |  3200.00 |
+| Fleaur      | SH_CLERK   |  3100.00 |
+| Geoni       | SH_CLERK   |  2800.00 |
+| Sarchand    | SH_CLERK   |  4200.00 |
+| Bull        | SH_CLERK   |  4100.00 |
+| Dellinger   | SH_CLERK   |  3400.00 |
+| Cabrio      | SH_CLERK   |  3000.00 |
+| Chung       | SH_CLERK   |  3800.00 |
+| Dilly       | SH_CLERK   |  3600.00 |
+| Gates       | SH_CLERK   |  2900.00 |
+| Bell        | SH_CLERK   |  4000.00 |
+| Everett     | SH_CLERK   |  3900.00 |
+| McCain      | SH_CLERK   |  3200.00 |
+| Jones       | SH_CLERK   |  2800.00 |
+| Walsh       | SH_CLERK   |  3100.00 |
+| Feeney      | SH_CLERK   |  3000.00 |
+| OConnell    | SH_CLERK   |  2600.00 |
+| Grant       | SH_CLERK   |  2600.00 |
+| Whalen      | AD_ASST    |  4400.00 |
+| Hartstein   | MK_MAN     | 13000.00 |
+| Fay         | MK_REP     |  6000.00 |
+| Mavris      | HR_REP     |  6500.00 |
+| Baer        | PR_REP     | 10000.00 |
+| Higgins     | AC_MGR     | 12000.00 |
+| Gietz       | AC_ACCOUNT |  8300.00 |
++-------------+------------+----------+
+97 rows in set, 109 warnings (0.00 sec)
+
+mysql> select last_name,job_id,salary from employees where job_id=('SA_REP'or 'CT_CLERK') and salary not in( 2500,3500,7000) ;
++-------------+------------+----------+
+| last_name   | job_id     | salary   |
++-------------+------------+----------+
+| King        | AD_PRES    | 24000.00 |
+| Kochhar     | AD_VP      | 17000.00 |
+| De Haan     | AD_VP      | 17000.00 |
+| Hunold      | IT_PROG    |  9000.00 |
+| Ernst       | IT_PROG    |  6000.00 |
+| Austin      | IT_PROG    |  4800.00 |
+| Pataballa   | IT_PROG    |  4800.00 |
+| Lorentz     | IT_PROG    |  4200.00 |
+| Greenberg   | FI_MGR     | 12000.00 |
+| Faviet      | FI_ACCOUNT |  9000.00 |
+| Chen        | FI_ACCOUNT |  8200.00 |
+| Sciarra     | FI_ACCOUNT |  7700.00 |
+| Urman       | FI_ACCOUNT |  7800.00 |
+| Popp        | FI_ACCOUNT |  6900.00 |
+| Raphaely    | PU_MAN     | 11000.00 |
+| Khoo        | PU_CLERK   |  3100.00 |
+| Baida       | PU_CLERK   |  2900.00 |
+| Tobias      | PU_CLERK   |  2800.00 |
+| Himuro      | PU_CLERK   |  2600.00 |
+| Weiss       | ST_MAN     |  8000.00 |
+| Fripp       | ST_MAN     |  8200.00 |
+| Kaufling    | ST_MAN     |  7900.00 |
+| Vollman     | ST_MAN     |  6500.00 |
+| Mourgos     | ST_MAN     |  5800.00 |
+| Nayer       | ST_CLERK   |  3200.00 |
+| Mikkilineni | ST_CLERK   |  2700.00 |
+| Landry      | ST_CLERK   |  2400.00 |
+| Markle      | ST_CLERK   |  2200.00 |
+| Bissot      | ST_CLERK   |  3300.00 |
+| Atkinson    | ST_CLERK   |  2800.00 |
+| Olson       | ST_CLERK   |  2100.00 |
+| Mallin      | ST_CLERK   |  3300.00 |
+| Rogers      | ST_CLERK   |  2900.00 |
+| Gee         | ST_CLERK   |  2400.00 |
+| Philtanker  | ST_CLERK   |  2200.00 |
+| Ladwig      | ST_CLERK   |  3600.00 |
+| Stiles      | ST_CLERK   |  3200.00 |
+| Seo         | ST_CLERK   |  2700.00 |
+| Davies      | ST_CLERK   |  3100.00 |
+| Matos       | ST_CLERK   |  2600.00 |
+| Russell     | SA_MAN     | 14000.00 |
+| Partners    | SA_MAN     | 13500.00 |
+| Errazuriz   | SA_MAN     | 12000.00 |
+| Cambrault   | SA_MAN     | 11000.00 |
+| Zlotkey     | SA_MAN     | 10500.00 |
+| Tucker      | SA_REP     | 10000.00 |
+| Bernstein   | SA_REP     |  9500.00 |
+| Hall        | SA_REP     |  9000.00 |
+| Olsen       | SA_REP     |  8000.00 |
+| Cambrault   | SA_REP     |  7500.00 |
+| King        | SA_REP     | 10000.00 |
+| Sully       | SA_REP     |  9500.00 |
+| McEwen      | SA_REP     |  9000.00 |
+| Smith       | SA_REP     |  8000.00 |
+| Doran       | SA_REP     |  7500.00 |
+| Vishney     | SA_REP     | 10500.00 |
+| Greene      | SA_REP     |  9500.00 |
+| Marvins     | SA_REP     |  7200.00 |
+| Lee         | SA_REP     |  6800.00 |
+| Ande        | SA_REP     |  6400.00 |
+| Banda       | SA_REP     |  6200.00 |
+| Ozer        | SA_REP     | 11500.00 |
+| Bloom       | SA_REP     | 10000.00 |
+| Fox         | SA_REP     |  9600.00 |
+| Smith       | SA_REP     |  7400.00 |
+| Bates       | SA_REP     |  7300.00 |
+| Kumar       | SA_REP     |  6100.00 |
+| Abel        | SA_REP     | 11000.00 |
+| Hutton      | SA_REP     |  8800.00 |
+| Taylor      | SA_REP     |  8600.00 |
+| Livingston  | SA_REP     |  8400.00 |
+| Johnson     | SA_REP     |  6200.00 |
+| Taylor      | SH_CLERK   |  3200.00 |
+| Fleaur      | SH_CLERK   |  3100.00 |
+| Geoni       | SH_CLERK   |  2800.00 |
+| Sarchand    | SH_CLERK   |  4200.00 |
+| Bull        | SH_CLERK   |  4100.00 |
+| Dellinger   | SH_CLERK   |  3400.00 |
+| Cabrio      | SH_CLERK   |  3000.00 |
+| Chung       | SH_CLERK   |  3800.00 |
+| Dilly       | SH_CLERK   |  3600.00 |
+| Gates       | SH_CLERK   |  2900.00 |
+| Bell        | SH_CLERK   |  4000.00 |
+| Everett     | SH_CLERK   |  3900.00 |
+| McCain      | SH_CLERK   |  3200.00 |
+| Jones       | SH_CLERK   |  2800.00 |
+| Walsh       | SH_CLERK   |  3100.00 |
+| Feeney      | SH_CLERK   |  3000.00 |
+| OConnell    | SH_CLERK   |  2600.00 |
+| Grant       | SH_CLERK   |  2600.00 |
+| Whalen      | AD_ASST    |  4400.00 |
+| Hartstein   | MK_MAN     | 13000.00 |
+| Fay         | MK_REP     |  6000.00 |
+| Mavris      | HR_REP     |  6500.00 |
+| Baer        | PR_REP     | 10000.00 |
+| Higgins     | AC_MGR     | 12000.00 |
+| Gietz       | AC_ACCOUNT |  8300.00 |
++-------------+------------+----------+
+97 rows in set, 109 warnings (0.00 sec)
+
+mysql> select last_name,job_id,salary from employees where job_id=('SA_REP'AND 'CT_CLERK') and salary not in( 2500,3500,7000) ;
++-------------+------------+----------+
+| last_name   | job_id     | salary   |
++-------------+------------+----------+
+| King        | AD_PRES    | 24000.00 |
+| Kochhar     | AD_VP      | 17000.00 |
+| De Haan     | AD_VP      | 17000.00 |
+| Hunold      | IT_PROG    |  9000.00 |
+| Ernst       | IT_PROG    |  6000.00 |
+| Austin      | IT_PROG    |  4800.00 |
+| Pataballa   | IT_PROG    |  4800.00 |
+| Lorentz     | IT_PROG    |  4200.00 |
+| Greenberg   | FI_MGR     | 12000.00 |
+| Faviet      | FI_ACCOUNT |  9000.00 |
+| Chen        | FI_ACCOUNT |  8200.00 |
+| Sciarra     | FI_ACCOUNT |  7700.00 |
+| Urman       | FI_ACCOUNT |  7800.00 |
+| Popp        | FI_ACCOUNT |  6900.00 |
+| Raphaely    | PU_MAN     | 11000.00 |
+| Khoo        | PU_CLERK   |  3100.00 |
+| Baida       | PU_CLERK   |  2900.00 |
+| Tobias      | PU_CLERK   |  2800.00 |
+| Himuro      | PU_CLERK   |  2600.00 |
+| Weiss       | ST_MAN     |  8000.00 |
+| Fripp       | ST_MAN     |  8200.00 |
+| Kaufling    | ST_MAN     |  7900.00 |
+| Vollman     | ST_MAN     |  6500.00 |
+| Mourgos     | ST_MAN     |  5800.00 |
+| Nayer       | ST_CLERK   |  3200.00 |
+| Mikkilineni | ST_CLERK   |  2700.00 |
+| Landry      | ST_CLERK   |  2400.00 |
+| Markle      | ST_CLERK   |  2200.00 |
+| Bissot      | ST_CLERK   |  3300.00 |
+| Atkinson    | ST_CLERK   |  2800.00 |
+| Olson       | ST_CLERK   |  2100.00 |
+| Mallin      | ST_CLERK   |  3300.00 |
+| Rogers      | ST_CLERK   |  2900.00 |
+| Gee         | ST_CLERK   |  2400.00 |
+| Philtanker  | ST_CLERK   |  2200.00 |
+| Ladwig      | ST_CLERK   |  3600.00 |
+| Stiles      | ST_CLERK   |  3200.00 |
+| Seo         | ST_CLERK   |  2700.00 |
+| Davies      | ST_CLERK   |  3100.00 |
+| Matos       | ST_CLERK   |  2600.00 |
+| Russell     | SA_MAN     | 14000.00 |
+| Partners    | SA_MAN     | 13500.00 |
+| Errazuriz   | SA_MAN     | 12000.00 |
+| Cambrault   | SA_MAN     | 11000.00 |
+| Zlotkey     | SA_MAN     | 10500.00 |
+| Tucker      | SA_REP     | 10000.00 |
+| Bernstein   | SA_REP     |  9500.00 |
+| Hall        | SA_REP     |  9000.00 |
+| Olsen       | SA_REP     |  8000.00 |
+| Cambrault   | SA_REP     |  7500.00 |
+| King        | SA_REP     | 10000.00 |
+| Sully       | SA_REP     |  9500.00 |
+| McEwen      | SA_REP     |  9000.00 |
+| Smith       | SA_REP     |  8000.00 |
+| Doran       | SA_REP     |  7500.00 |
+| Vishney     | SA_REP     | 10500.00 |
+| Greene      | SA_REP     |  9500.00 |
+| Marvins     | SA_REP     |  7200.00 |
+| Lee         | SA_REP     |  6800.00 |
+| Ande        | SA_REP     |  6400.00 |
+| Banda       | SA_REP     |  6200.00 |
+| Ozer        | SA_REP     | 11500.00 |
+| Bloom       | SA_REP     | 10000.00 |
+| Fox         | SA_REP     |  9600.00 |
+| Smith       | SA_REP     |  7400.00 |
+| Bates       | SA_REP     |  7300.00 |
+| Kumar       | SA_REP     |  6100.00 |
+| Abel        | SA_REP     | 11000.00 |
+| Hutton      | SA_REP     |  8800.00 |
+| Taylor      | SA_REP     |  8600.00 |
+| Livingston  | SA_REP     |  8400.00 |
+| Johnson     | SA_REP     |  6200.00 |
+| Taylor      | SH_CLERK   |  3200.00 |
+| Fleaur      | SH_CLERK   |  3100.00 |
+| Geoni       | SH_CLERK   |  2800.00 |
+| Sarchand    | SH_CLERK   |  4200.00 |
+| Bull        | SH_CLERK   |  4100.00 |
+| Dellinger   | SH_CLERK   |  3400.00 |
+| Cabrio      | SH_CLERK   |  3000.00 |
+| Chung       | SH_CLERK   |  3800.00 |
+| Dilly       | SH_CLERK   |  3600.00 |
+| Gates       | SH_CLERK   |  2900.00 |
+| Bell        | SH_CLERK   |  4000.00 |
+| Everett     | SH_CLERK   |  3900.00 |
+| McCain      | SH_CLERK   |  3200.00 |
+| Jones       | SH_CLERK   |  2800.00 |
+| Walsh       | SH_CLERK   |  3100.00 |
+| Feeney      | SH_CLERK   |  3000.00 |
+| OConnell    | SH_CLERK   |  2600.00 |
+| Grant       | SH_CLERK   |  2600.00 |
+| Whalen      | AD_ASST    |  4400.00 |
+| Hartstein   | MK_MAN     | 13000.00 |
+| Fay         | MK_REP     |  6000.00 |
+| Mavris      | HR_REP     |  6500.00 |
+| Baer        | PR_REP     | 10000.00 |
+| Higgins     | AC_MGR     | 12000.00 |
+| Gietz       | AC_ACCOUNT |  8300.00 |
++-------------+------------+----------+
+97 rows in set, 108 warnings (0.00 sec)
+
+mysql> select last_name,job_id,salary from employees where job_id='SA_REP'OR 'CT_CLERK' and salary not in( 2500,3500,7000) ;
++------------+--------+----------+
+| last_name  | job_id | salary   |
++------------+--------+----------+
+| Tucker     | SA_REP | 10000.00 |
+| Bernstein  | SA_REP |  9500.00 |
+| Hall       | SA_REP |  9000.00 |
+| Olsen      | SA_REP |  8000.00 |
+| Cambrault  | SA_REP |  7500.00 |
+| Tuvault    | SA_REP |  7000.00 |
+| King       | SA_REP | 10000.00 |
+| Sully      | SA_REP |  9500.00 |
+| McEwen     | SA_REP |  9000.00 |
+| Smith      | SA_REP |  8000.00 |
+| Doran      | SA_REP |  7500.00 |
+| Sewall     | SA_REP |  7000.00 |
+| Vishney    | SA_REP | 10500.00 |
+| Greene     | SA_REP |  9500.00 |
+| Marvins    | SA_REP |  7200.00 |
+| Lee        | SA_REP |  6800.00 |
+| Ande       | SA_REP |  6400.00 |
+| Banda      | SA_REP |  6200.00 |
+| Ozer       | SA_REP | 11500.00 |
+| Bloom      | SA_REP | 10000.00 |
+| Fox        | SA_REP |  9600.00 |
+| Smith      | SA_REP |  7400.00 |
+| Bates      | SA_REP |  7300.00 |
+| Kumar      | SA_REP |  6100.00 |
+| Abel       | SA_REP | 11000.00 |
+| Hutton     | SA_REP |  8800.00 |
+| Taylor     | SA_REP |  8600.00 |
+| Livingston | SA_REP |  8400.00 |
+| Grant      | SA_REP |  7000.00 |
+| Johnson    | SA_REP |  6200.00 |
++------------+--------+----------+
+30 rows in set, 1 warning (0.00 sec)
+
+mysql> select min(hire_date),max(hire_date) from employees;
++----------------+----------------+
+| min(hire_date) | max(hire_date) |
++----------------+----------------+
+| 1987-06-17     | 2000-04-21     |
++----------------+----------------+
+1 row in set (0.00 sec)
+
+mysql> select count*  from employees where depaartment_id=50;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'from employees where depaartment_id=50' at line 1
+mysql> select count(*)  from employees where depaartment_id=50;
+ERROR 1054 (42S22): Unknown column 'depaartment_id' in 'where clause'
+mysql> select count(*) from employees where depaartment_id=50;
+ERROR 1054 (42S22): Unknown column 'depaartment_id' in 'where clause'
+mysql> select count(*) from employees where department_id=50;
++----------+
+| count(*) |
++----------+
+|       45 |
++----------+
+1 row in set (0.00 sec)
+
+mysql> select count(distinct department_id) from employees where department_id=50;
++-------------------------------+
+| count(distinct department_id) |
++-------------------------------+
+|                             1 |
++-------------------------------+
+1 row in set (0.00 sec)
+
+mysql> select count(distinct department_id) from employees ;
++-------------------------------+
+| count(distinct department_id) |
++-------------------------------+
+|                            11 |
++-------------------------------+
+1 row in set (0.00 sec)
+
+mysql> select avg(commission_pct) from employees ;
++---------------------+
+| avg(commission_pct) |
++---------------------+
+|            0.222857 |
++---------------------+
+1 row in set (0.00 sec)
+
+mysql> select avg(null if(commission_pct,0)) from employees ;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'if(commission_pct,0)) from employees' at line 1
+mysql> select avg(nullif(commission_pct,0)) from employees ;
++-------------------------------+
+| avg(nullif(commission_pct,0)) |
++-------------------------------+
+|                      0.222857 |
++-------------------------------+
+1 row in set (0.00 sec)
+
+mysql> select department_id ,avg(salary) from employees group by department_id;
++---------------+--------------+
+| department_id | avg(salary)  |
++---------------+--------------+
+|          NULL |  7000.000000 |
+|            10 |  4400.000000 |
+|            20 |  9500.000000 |
+|            30 |  4150.000000 |
+|            40 |  6500.000000 |
+|            50 |  3475.555556 |
+|            60 |  5760.000000 |
+|            70 | 10000.000000 |
+|            80 |  8955.882353 |
+|            90 | 19333.333333 |
+|           100 |  8600.000000 |
+|           110 | 10150.000000 |
++---------------+--------------+
+12 rows in set (0.00 sec)
+
+mysql> select department_id ,avg(salary) from employees group by department_id having salary>4400;
+ERROR 1054 (42S22): Unknown column 'salary' in 'having clause'
+mysql> select department_id ,avg(salary) from employees group by department_id having salary>=4400;
+ERROR 1054 (42S22): Unknown column 'salary' in 'having clause'
+mysql> select department_id ,avg(salary) from employees group by department_id having salary>4000;
+ERROR 1054 (42S22): Unknown column 'salary' in 'having clause'
+mysql> select department_id ,avg(salary) from employees group by department_id having avg(salary)>4000;
++---------------+--------------+
+| department_id | avg(salary)  |
++---------------+--------------+
+|          NULL |  7000.000000 |
+|            10 |  4400.000000 |
+|            20 |  9500.000000 |
+|            30 |  4150.000000 |
+|            40 |  6500.000000 |
+|            60 |  5760.000000 |
+|            70 | 10000.000000 |
+|            80 |  8955.882353 |
+|            90 | 19333.333333 |
+|           100 |  8600.000000 |
+|           110 | 10150.000000 |
++---------------+--------------+
+11 rows in set (0.00 sec)
+
+mysql> select department_id ,avg(salary) from employees group by department_id having avg(salary)>8000;
++---------------+--------------+
+| department_id | avg(salary)  |
++---------------+--------------+
+|            20 |  9500.000000 |
+|            70 | 10000.000000 |
+|            80 |  8955.882353 |
+|            90 | 19333.333333 |
+|           100 |  8600.000000 |
+|           110 | 10150.000000 |
++---------------+--------------+
+6 rows in set (0.00 sec)
+
+mysql> select ,avg(salary) from employees group by department_id having avg(salary)>8000;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near ',avg(salary) from employees group by department_id having avg(salary)>8000' at line 1
+mysql> select ,avg(salary) from employees group by department_id ;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near ',avg(salary) from employees group by department_id' at line 1
+mysql> select avg(salary) from employees group by department_id ;
++--------------+
+| avg(salary)  |
++--------------+
+|  7000.000000 |
+|  4400.000000 |
+|  9500.000000 |
+|  4150.000000 |
+|  6500.000000 |
+|  3475.555556 |
+|  5760.000000 |
+| 10000.000000 |
+|  8955.882353 |
+| 19333.333333 |
+|  8600.000000 |
+| 10150.000000 |
++--------------+
+12 rows in set (0.00 sec)
+
+mysql> select avg(salary) from employees group by department_id having avg(salary>4000) ;
++--------------+
+| avg(salary)  |
++--------------+
+|  7000.000000 |
+|  4400.000000 |
+|  9500.000000 |
+|  4150.000000 |
+|  6500.000000 |
+|  3475.555556 |
+|  5760.000000 |
+| 10000.000000 |
+|  8955.882353 |
+| 19333.333333 |
+|  8600.000000 |
+| 10150.000000 |
++--------------+
+12 rows in set (0.00 sec)
+
+mysql> select avg(salary) from employees group by department_id having avg(salary>7000) ;
++--------------+
+| avg(salary)  |
++--------------+
+|  9500.000000 |
+|  4150.000000 |
+|  3475.555556 |
+|  5760.000000 |
+| 10000.000000 |
+|  8955.882353 |
+| 19333.333333 |
+|  8600.000000 |
+| 10150.000000 |
++--------------+
+9 rows in set (0.00 sec)
+
+mysql> select avg(salary) as avgsal  from employees group by depatment_id;
+ERROR 1054 (42S22): Unknown column 'depatment_id' in 'group statement'
+mysql> select avg(salary) as avgsal  from employees group by department_id;
++--------------+
+| avgsal       |
++--------------+
+|  7000.000000 |
+|  4400.000000 |
+|  9500.000000 |
+|  4150.000000 |
+|  6500.000000 |
+|  3475.555556 |
+|  5760.000000 |
+| 10000.000000 |
+|  8955.882353 |
+| 19333.333333 |
+|  8600.000000 |
+| 10150.000000 |
++--------------+
+12 rows in set (0.00 sec)
+
+mysql> select avgsal order by desc;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'desc' at line 1
+mysql> select avgsal from employees order by desc;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'desc' at line 1
+mysql> select avg(sal),max(sal),min(sal),sum(sal) from employees;
+ERROR 1054 (42S22): Unknown column 'sal' in 'field list'
+mysql> select avg(salary),max(salary),min(salary),sum(salary) from employees;
++-------------+-------------+-------------+-------------+
+| avg(salary) | max(salary) | min(salary) | sum(salary) |
++-------------+-------------+-------------+-------------+
+| 6461.682243 |    24000.00 |     2100.00 |   691400.00 |
++-------------+-------------+-------------+-------------+
+1 row in set (0.00 sec)
+
+mysql> select  avg(salary),max(salary),min(salary),sum(salary) from employee group by group_id;
+ERROR 1146 (42S02): Table 'hr.employee' doesn't exist
+mysql> select  avg(salary),max(salary),min(salary),sum(salary) from employees group by group_id;
+ERROR 1054 (42S22): Unknown column 'group_id' in 'group statement'
+mysql> select  avg(salary),max(salary),min(salary),sum(salary) from employees groupby group_id;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'group_id' at line 1
+mysql> select  avg(salary),max(salary),min(salary),sum(salary) from employees group by job_id;
++--------------+-------------+-------------+-------------+
+| avg(salary)  | max(salary) | min(salary) | sum(salary) |
++--------------+-------------+-------------+-------------+
+|  8300.000000 |     8300.00 |     8300.00 |     8300.00 |
+| 12000.000000 |    12000.00 |    12000.00 |    12000.00 |
+|  4400.000000 |     4400.00 |     4400.00 |     4400.00 |
+| 24000.000000 |    24000.00 |    24000.00 |    24000.00 |
+| 17000.000000 |    17000.00 |    17000.00 |    34000.00 |
+|  7920.000000 |     9000.00 |     6900.00 |    39600.00 |
+| 12000.000000 |    12000.00 |    12000.00 |    12000.00 |
+|  6500.000000 |     6500.00 |     6500.00 |     6500.00 |
+|  5760.000000 |     9000.00 |     4200.00 |    28800.00 |
+| 13000.000000 |    13000.00 |    13000.00 |    13000.00 |
+|  6000.000000 |     6000.00 |     6000.00 |     6000.00 |
+| 10000.000000 |    10000.00 |    10000.00 |    10000.00 |
+|  2780.000000 |     3100.00 |     2500.00 |    13900.00 |
+| 11000.000000 |    11000.00 |    11000.00 |    11000.00 |
+| 12200.000000 |    14000.00 |    10500.00 |    61000.00 |
+|  8350.000000 |    11500.00 |     6100.00 |   250500.00 |
+|  3215.000000 |     4200.00 |     2500.00 |    64300.00 |
+|  2785.000000 |     3600.00 |     2100.00 |    55700.00 |
+|  7280.000000 |     8200.00 |     5800.00 |    36400.00 |
++--------------+-------------+-------------+-------------+
+19 rows in set (0.00 sec)
+
+mysql> select  sum(distinct(manager_id)) from employees;
++---------------------------+
+| sum(distinct(manager_id)) |
++---------------------------+
+|                      2379 |
++---------------------------+
+1 row in set (0.00 sec)
+
+mysql> select  (max(salary)-min(salary)) as difference from employees;
++------------+
+| difference |
++------------+
+|   21900.00 |
++------------+
+1 row in set (0.00 sec)
+
+mysql> select manager_id,min(salary) from employees having manager_id isnot null  group by manager_id desc ;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'isnot null  group by manager_id desc' at line 1
+mysql> select manager_id,min(salary) from employees  group by manager_id having manager_id is ni null and min(salary)>6000 order by salary asc ;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'ni null and min(salary)>6000 order by salary asc' at line 1
+mysql> select manager_id,min(salary) from employees  group by manager_id having manager_id is null and min(salary)>6000 order by salary asc ;
++------------+-------------+
+| manager_id | min(salary) |
++------------+-------------+
+|       NULL |    24000.00 |
++------------+-------------+
+1 row in set (0.00 sec)
+
+mysql> select manager_id,min(salary) from employees  group by manager_id having manager_id is not null and min(salary)>6000 order by salary asc ;
++------------+-------------+
+| manager_id | min(salary) |
++------------+-------------+
+|        205 |     8300.00 |
+|        102 |     9000.00 |
+|        108 |     6900.00 |
+|        145 |     7000.00 |
+|        146 |     7000.00 |
+|        147 |     6200.00 |
+|        149 |     6200.00 |
+|        148 |     6100.00 |
++------------+-------------+
+8 rows in set (0.00 sec)
+
+mysql> select manager_id,max(salary) from employees order by salary desc ;
++------------+-------------+
+| manager_id | max(salary) |
++------------+-------------+
+|       NULL |    24000.00 |
++------------+-------------+
+1 row in set (0.00 sec)
+
+mysql> select manager_id,max(salary) from employees  ;
++------------+-------------+
+| manager_id | max(salary) |
++------------+-------------+
+|       NULL |    24000.00 |
++------------+-------------+
+1 row in set (0.00 sec)
+
+mysql> select manager_id,max(salary) from employees group by manager_id ;
++------------+-------------+
+| manager_id | max(salary) |
++------------+-------------+
+|       NULL |    24000.00 |
+|        100 |    17000.00 |
+|        101 |    12000.00 |
+|        102 |     9000.00 |
+|        103 |     6000.00 |
+|        108 |     9000.00 |
+|        114 |     3100.00 |
+|        120 |     3200.00 |
+|        121 |     4200.00 |
+|        122 |     3800.00 |
+|        123 |     4000.00 |
+|        124 |     3500.00 |
+|        145 |    10000.00 |
+|        146 |    10000.00 |
+|        147 |    10500.00 |
+|        148 |    11500.00 |
+|        149 |    11000.00 |
+|        201 |     6000.00 |
+|        205 |     8300.00 |
++------------+-------------+
+19 rows in set (0.00 sec)
+
+mysql> select max(salary) from employees order by desc ;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'desc' at line 1
+mysql> select max(salary) from employees order by salary desc ;
++-------------+
+| max(salary) |
++-------------+
+|    24000.00 |
++-------------+
+1 row in set (0.00 sec)
+
+mysql> select max(salary) from employees order by salary desc limit 2 ;
++-------------+
+| max(salary) |
++-------------+
+|    24000.00 |
++-------------+
+1 row in set (0.00 sec)
+
+mysql> select max(salary) from employees order by salary desc limit 2,1 ;
+Empty set (0.00 sec)
+
+mysql> select max(salary) from employees order by salary desc limit 1 ;
++-------------+
+| max(salary) |
++-------------+
+|    24000.00 |
++-------------+
+1 row in set (0.00 sec)
+
+mysql> select max(salary) from employees order by salary desc limit 3 ;
++-------------+
+| max(salary) |
++-------------+
+|    24000.00 |
++-------------+
+1 row in set (0.00 sec)
+
+mysql> select salary from employees order by salary desc limit 3 ;
++----------+
+| salary   |
++----------+
+| 24000.00 |
+| 17000.00 |
+| 17000.00 |
++----------+
+3 rows in set (0.00 sec)
+
+mysql> select job ,de
+    -> select job_id as job ,department_id ,sum(salary) as total salary from employees group by department_id;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near 'select job_id as job ,department_id ,sum(salary) as total salary from employees ' at line 2
+mysql> show databases;
++--------------------+
+| Database           |
++--------------------+
+| hr                 |
+| information_schema |
+| mysql              |
+| performance_schema |
+| sakila             |
+| sys                |
+| world              |
++--------------------+
+7 rows in set (0.00 sec)
+
+mysql> show table;
+ERROR 1064 (42000): You have an error in your SQL syntax; check the manual that corresponds to your MySQL server version for the right syntax to use near '' at line 1
+mysql>
